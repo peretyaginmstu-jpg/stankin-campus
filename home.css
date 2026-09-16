@@ -1,0 +1,81 @@
+/* Главная страница (16.09.2026): только то, чего нет в общем слое ui.css —
+   показатели в hero, бегущая строка, боковой указатель разделов, bento-сетка,
+   отступы разделов главной. */
+
+body[data-page=home] .header { transition: background-color .45s ease, transform .5s var(--ease); }
+
+/* ---------- Hero главной: показатели и подпись ---------- */
+.hero-stats { display: flex; gap: clamp(28px, 4vw, 72px); margin: 0; }
+.hero-stats div { max-width: 230px; }
+.hero-stats dt { font-family: var(--serif); font-size: clamp(26px, 2.5vw, 42px); letter-spacing: -.04em; line-height: 1.05; white-space: nowrap; }
+.hero-stats dt span { font-size: .55em; letter-spacing: -.02em; }
+.hero-stats dd { margin: 8px 0 0; font-size: 12px; line-height: 1.45; color: #cfcabf; }
+.hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 14px; }
+.hero-side .hero-caption { text-align: right; }
+
+/* ---------- Бегущая строка с показателями ---------- */
+.ticker {
+  background: var(--ink); color: var(--paper); border-top: 1px solid var(--rule-dark); padding: 17px 0; overflow: hidden;
+  -webkit-mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.ticker-track { display: flex; width: max-content; animation: marquee 52s linear infinite; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; color: #d4d0c6; }
+.ticker-track span { display: inline-flex; align-items: center; gap: 40px; padding-right: 40px; }
+.ticker-track span::after { content: ""; width: 6px; height: 6px; flex-shrink: 0; background: var(--accent-light); transform: rotate(45deg); }
+.ticker:hover .ticker-track { animation-play-state: paused; }
+@keyframes marquee { to { transform: translateX(-50%); } }
+
+/* ---------- Bento: кампус в цифрах ---------- */
+.facts { padding-bottom: clamp(60px, 8vw, 130px); }
+.bento {
+  display: grid; gap: 14px; grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-areas: "a a a a a b b b b c c c" "a a a a a d d d d e e e" "f f f f f f f f f f f f";
+}
+.tile-a { grid-area: a; }
+.tile-b { grid-area: b; }
+.tile-c { grid-area: c; }
+.tile-d { grid-area: d; }
+.tile-e { grid-area: e; }
+.tile-f { grid-area: f; }
+.tile-a {
+  background: var(--ink); color: var(--paper);
+  background-image: linear-gradient(rgba(243, 239, 230, .07) 1px, transparent 1px), linear-gradient(90deg, rgba(243, 239, 230, .07) 1px, transparent 1px);
+  background-size: 40px 40px; background-position: center;
+}
+.tile-a .tile-num { font-size: clamp(64px, 7vw, 132px); }
+.tile-a .tile-link .icon { filter: invert(1); }
+.tile-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; list-style: none; margin: 0; padding: 0; }
+.tile-steps li { max-width: 300px; padding-top: 16px; border-top: 1px solid var(--rule-dark); font-size: 14px; line-height: 1.5; color: #cfcabf; }
+.tile-steps li span { display: block; margin-bottom: 12px; font-family: var(--serif); font-size: clamp(36px, 3.2vw, 60px); line-height: 1; letter-spacing: -.04em; color: var(--paper); }
+
+/* ---------- Отступы разделов главной ---------- */
+.making { margin-top: clamp(60px, 7vw, 110px); }
+.making-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 6%; align-items: center; margin-top: 16px; }
+.making-foot { display: flex; justify-content: space-between; align-items: center; gap: 24px; flex-wrap: wrap; margin-top: clamp(36px, 5vw, 64px); }
+.life { padding: clamp(80px, 9vw, 140px) 0 clamp(50px, 6vw, 100px); }
+.timeline { padding: clamp(80px, 9vw, 140px) 0 clamp(80px, 9vw, 130px); }
+
+/* ---------- Адаптив ---------- */
+@media (max-width: 1200px) {
+  .bento { grid-template-areas: "a a a a a a b b b b b b" "a a a a a a c c c c c c" "d d d d d d e e e e e e" "f f f f f f f f f f f f"; }
+}
+@media (max-width: 900px) {
+  .hero-stats { display: none; }
+  .hero-side { width: 100%; flex-direction: row; justify-content: space-between; align-items: center; }
+  .hero-side .hero-caption { text-align: left; }
+  .making-layout { grid-template-columns: 1fr; gap: 34px; }
+  .making-visual { order: -1; aspect-ratio: 16 / 10; }
+  .tile-steps { grid-template-columns: 1fr; gap: 14px; }
+}
+@media (max-width: 650px) {
+  .hero-side { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .bento { gap: 10px; grid-template-areas: "a a a a a a a a a a a a" "b b b b b b b b b b b b" "c c c c c c c c c c c c" "d d d d d d d d d d d d" "e e e e e e e e e e e e" "f f f f f f f f f f f f"; }
+  .tile-a .tile-num { font-size: 64px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track { animation: none; }
+}
+@media print {
+  .ticker { display: none; }
+  .tile-a { background: white; color: black; }
+}

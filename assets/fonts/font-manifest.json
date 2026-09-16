@@ -1,0 +1,153 @@
+{
+  "downloaded": "2026-09-15",
+  "license": "SIL Open Font License 1.1",
+  "recommendedPair": "Prata 400 for large editorial headings; Golos Text 400–900 for body, navigation, labels, and emphasis. Both normal/upright; Prata must not use synthesized bold or italic.",
+  "sourceCss": "https://fonts.googleapis.com/css2?family=Golos+Text:wght@400..900&family=Prata&display=swap",
+  "checks": [
+    {
+      "file": "Prata-Regular.ttf",
+      "russianAlphabet": "all 66 upper/lower case letters verified",
+      "mappedCodepoints": 521,
+      "variationAxes": []
+    },
+    {
+      "file": "GolosText-Variable.ttf",
+      "russianAlphabet": "all 66 upper/lower case letters verified",
+      "mappedCodepoints": 566,
+      "variationAxes": [
+        {
+          "tag": "wght",
+          "min": 400.0,
+          "default": 400.0,
+          "max": 900.0
+        }
+      ]
+    }
+  ],
+  "assets": [
+    {
+      "file": "golos-text-variable-cyrillic-ext.woff2",
+      "source": "https://fonts.gstatic.com/s/golostext/v7/q5uCsoe9Lv5t7Meb31EcEx58hLxR.woff2",
+      "family": "Golos Text",
+      "weight": "400 900",
+      "style": "normal",
+      "subset": "cyrillic-ext",
+      "unicodeRange": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
+      "bytes": 17508,
+      "sha256": "70cf502d77aa23c8a573db8853f20a8db705d18414d170f257a9e939113aad47"
+    },
+    {
+      "file": "golos-text-variable-cyrillic.woff2",
+      "source": "https://fonts.gstatic.com/s/golostext/v7/q5uCsoe9Lv5t7Meb31EcExd8hLxR.woff2",
+      "family": "Golos Text",
+      "weight": "400 900",
+      "style": "normal",
+      "subset": "cyrillic",
+      "unicodeRange": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
+      "bytes": 22032,
+      "sha256": "17d048ca05cb1218af3c0d6dcdf882989e6d1cc5dcb598ea50eaf54850ff7229"
+    },
+    {
+      "file": "golos-text-variable-latin-ext.woff2",
+      "source": "https://fonts.gstatic.com/s/golostext/v7/q5uCsoe9Lv5t7Meb31EcEx18hLxR.woff2",
+      "family": "Golos Text",
+      "weight": "400 900",
+      "style": "normal",
+      "subset": "latin-ext",
+      "unicodeRange": "U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF",
+      "bytes": 19180,
+      "sha256": "05befabe4813f41238ce6ea4f5ecd6b758591e9ef2f303a9932bff68ba66dc66"
+    },
+    {
+      "file": "golos-text-variable-latin.woff2",
+      "source": "https://fonts.gstatic.com/s/golostext/v7/q5uCsoe9Lv5t7Meb31EcExN8hA.woff2",
+      "family": "Golos Text",
+      "weight": "400 900",
+      "style": "normal",
+      "subset": "latin",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+      "bytes": 37916,
+      "sha256": "9a69d0aa4734c4022224c002a3d944a702e0204972a49d892789f5668b922c2a"
+    },
+    {
+      "file": "prata-regular-cyrillic-ext.woff2",
+      "source": "https://fonts.gstatic.com/s/prata/v22/6xKhdSpbNNCT-sWCCm7JLQ.woff2",
+      "family": "Prata",
+      "weight": "400",
+      "style": "normal",
+      "subset": "cyrillic-ext",
+      "unicodeRange": "U+0460-052F, U+1C80-1C8A, U+20B4, U+2DE0-2DFF, U+A640-A69F, U+FE2E-FE2F",
+      "bytes": 12868,
+      "sha256": "1a71ca94e943aac8154d195f9ea21959d374ebf3a3a9420651d0dbb46253f897"
+    },
+    {
+      "file": "prata-regular-cyrillic.woff2",
+      "source": "https://fonts.gstatic.com/s/prata/v22/6xKhdSpbNNCT-sWLCm7JLQ.woff2",
+      "family": "Prata",
+      "weight": "400",
+      "style": "normal",
+      "subset": "cyrillic",
+      "unicodeRange": "U+0301, U+0400-045F, U+0490-0491, U+04B0-04B1, U+2116",
+      "bytes": 13132,
+      "sha256": "3392de5a383deac60effcad2beb8b847f40eb0eb200ffd4888c3e13d6e40845f"
+    },
+    {
+      "file": "prata-regular-vietnamese.woff2",
+      "source": "https://fonts.gstatic.com/s/prata/v22/6xKhdSpbNNCT-sWACm7JLQ.woff2",
+      "family": "Prata",
+      "weight": "400",
+      "style": "normal",
+      "subset": "vietnamese",
+      "unicodeRange": "U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB",
+      "bytes": 7396,
+      "sha256": "60aab7caa7ea16a76672583f1db7f2e7ea17ee205e00e1c1027a06cc548a6a9b"
+    },
+    {
+      "file": "prata-regular-latin.woff2",
+      "source": "https://fonts.gstatic.com/s/prata/v22/6xKhdSpbNNCT-sWPCm4.woff2",
+      "family": "Prata",
+      "weight": "400",
+      "style": "normal",
+      "subset": "latin",
+      "unicodeRange": "U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD",
+      "bytes": 19224,
+      "sha256": "1b85a8c794709747c9f689b791984c430a2d9716a5cf9440d955bd7d20dad9d0"
+    },
+    {
+      "file": "Prata-Regular.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/prata/Prata-Regular.ttf",
+      "family": "Prata",
+      "weight": "400",
+      "style": "normal",
+      "kind": "source font",
+      "bytes": 101284,
+      "sha256": "3b2b880737be3bda5f03554297b758516876157c88f9e3b3bae8fa1fc96a2c2c"
+    },
+    {
+      "file": "GolosText-Variable.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/golostext/GolosText%5Bwght%5D.ttf",
+      "family": "Golos Text",
+      "weight": "400 900",
+      "style": "normal",
+      "kind": "source font",
+      "bytes": 184292,
+      "sha256": "17bb58fb69aec2dfb047a2ebf52534023e9b688c97a6b7ac795b0a72912c2063"
+    },
+    {
+      "file": "Prata-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/prata/OFL.txt",
+      "family": "Prata",
+      "kind": "license",
+      "bytes": 4476,
+      "sha256": "1e055d25bde41906cc2e1a08bc156e7776d5084e1640d75dbd0065a937b488e3"
+    },
+    {
+      "file": "Golos-Text-OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/main/ofl/golostext/OFL.txt",
+      "family": "Golos Text",
+      "kind": "license",
+      "bytes": 4394,
+      "sha256": "ff532f9e8789f09a9fdffc3c0954eedfb0a48be77b2e2eb90f5f82e4f347f50c"
+    }
+  ]
+}
