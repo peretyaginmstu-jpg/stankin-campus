@@ -407,6 +407,29 @@ html.js .tl-item.in > div { opacity: 1; transform: none; }
   .fold > div { padding-right: 0; }
 }
 
+/* ---------- Облегчённое движение: телефоны и сенсорные экраны ----------
+   Без параллакса, пословных заголовков, подсветки слов и ступенчатых задержек;
+   остаются мягкое появление блоков, смена сцен, счётчики и аккордеоны. */
+@media (max-width: 900px), (pointer: coarse) {
+  html.js .reveal { transform: none; transition: opacity .45s ease; transition-delay: 0s; }
+  .hero-media, .hero-content, .hero-watermark, .finale-media, .finale-watermark { transform: none !important; }
+  .hero-content { opacity: 1 !important; animation: fade-up .8s ease both; }
+  .hero-media img { animation: none; }
+  .hero-title .w > span { animation: none; transform: none; }
+  .hero-eyebrow, .hero-row, .hero-bar, .hero-lede, .hero .breadcrumb, .hero-actions { opacity: 1; animation: none; }
+  .manifesto-text .mw { color: var(--ink); transition: none; }
+  .sheet .manifesto-text .mw, .making .manifesto-text .mw { color: var(--paper); }
+  html.js .tl-item > div { opacity: 1; transform: none; transition: none; }
+  .card-media img { translate: none !important; transition: none; }
+  .tour-fig img { transform: none; transition: none; }
+  .making-fig img, .making-fig.is-active img, .making-fig.detail img, .making-fig.detail.is-active img { transition: none; }
+  .making-fig img, .making-fig.is-active img { transform: none; }
+  .making-fig.detail img, .making-fig.detail.is-active img { transform: scale(1.5); }
+  .tile, .tile-image > img { transition: none; }
+  .tile:hover { transform: none; box-shadow: none; }
+  .scroll-progress { display: none; }
+}
+
 /* ---------- Уменьшенное движение ---------- */
 @media (prefers-reduced-motion: reduce) {
   html.js .reveal, html.js .tl-item > div { opacity: 1; transform: none; transition: none; }

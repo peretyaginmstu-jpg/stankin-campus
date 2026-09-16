@@ -264,6 +264,15 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
   .now-date { font-size: clamp(36px, 11vw, 52px); }
 }
 
+@media (max-width: 900px), (pointer: coarse) {
+  .hotspot-dot::before { animation: none; opacity: 0; }
+  .hotspot.selected .hotspot-dot::before { opacity: .9; }
+  .feature-figure img { animation: none; }
+  html.js .reveal .chips li { transition-delay: 0s; transition-duration: .35s; }
+  .roadmap-marker { transition-delay: 0s; }
+  .object-card-media img, .story-card, .material { transition: none; }
+  .story-card:hover, .material:hover { transform: none; box-shadow: none; }
+}
 @media (prefers-reduced-motion: reduce) {
   .hotspot-dot::before, .feature-figure img { animation: none !important; }
   html.js .reveal .chips li, .roadmap-marker, .object-detail, .object-card-media img { opacity: 1; transform: none; translate: none; transition: none !important; }

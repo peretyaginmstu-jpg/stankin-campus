@@ -5,13 +5,16 @@ const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+/* Облегчённый режим: телефоны и сенсорные экраны — без эффектов, привязанных к прокрутке. */
+const lite = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
+const still = () => reduced.matches || lite;
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const format = (n) => n.toLocaleString('ru-RU');
 
 /* ---------- Появление блоков ---------- */
 const revealer = new IntersectionObserver((entries) => {
   entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); revealer.unobserve(e.target); } });
-}, { threshold: .12, rootMargin: '0px 0px -8% 0px' });
+}, { threshold: lite ? 0.01 : .12, rootMargin: lite ? '0px 0px 12% 0px' : '0px 0px -8% 0px' });
 $$('.reveal').forEach((el) => revealer.observe(el));
 
 /* ---------- Счётчики показателей ---------- */
@@ -21,7 +24,7 @@ const counters = new IntersectionObserver((entries) => {
     counters.unobserve(e.target);
     const el = e.target, target = Number(el.dataset.count);
     if (reduced.matches || !Number.isFinite(target)) { el.textContent = format(target); return; }
-    const start = performance.now(), duration = 1500;
+    const start = performance.now(), duration = lite ? 1000 : 1500;
     const tick = (now) => {
       const p = clamp01((now - start) / duration), eased = 1 - Math.pow(1 - p, 4);
       el.textContent = format(Math.round(target * eased));
@@ -40,7 +43,7 @@ const manifestos = $$('[data-words]').map((el) => {
     return i ? [document.createTextNode(' '), span] : [span];
   }));
   const words = $$('.mw', el);
-  if (reduced.matches) words.forEach((w) => w.classList.add('lit'));
+  if (still()) words.forEach((w) => w.classList.add('lit'));
   return { el, words };
 });
 
@@ -55,12 +58,12 @@ let ticking = false;
 function update() {
   ticking = false;
   const y = scrollY, vh = innerHeight;
-  if (!reduced.matches && hero) root.style.setProperty('--sy', Math.min(y, vh * 1.2).toFixed(1));
+  if (!still() && hero) root.style.setProperty('--sy', Math.min(y, vh * 1.2).toFixed(1));
   if (progress && !cssScrollTimeline) {
     const max = root.scrollHeight - vh;
     progress.style.setProperty('--sp', max > 0 ? clamp01(y / max).toFixed(4) : 0);
   }
-  if (!reduced.matches) manifestos.forEach(({ el, words }) => {
+  if (!still()) manifestos.forEach(({ el, words }) => {
     const r = el.getBoundingClientRect();
     const lit = Math.round(clamp01((vh * .8 - r.top) / (r.height + vh * .25)) * words.length);
     words.forEach((w, i) => w.classList.toggle('lit', i < lit));
@@ -70,7 +73,7 @@ function update() {
     el.style.setProperty('--tl', clamp01((vh * .6 - r.top) / r.height).toFixed(4));
     items.forEach((li) => li.classList.toggle('in', li.getBoundingClientRect().top < vh * .62));
   });
-  if (finale && !reduced.matches) {
+  if (finale && !still()) {
     const r = finale.getBoundingClientRect();
     if (r.bottom > 0 && r.top < vh) {
       const p = (vh - r.top) / (vh + r.height);
@@ -166,7 +169,7 @@ $$('.gallery-track').forEach((track) => {
       bar.style.width = width + 'px';
       bar.style.transform = 'translateX(' + (p * (trackWidth - width)).toFixed(1) + 'px)';
     }
-    if (!reduced.matches) cards.forEach((card) => {
+    if (!still()) cards.forEach((card) => {
       const img = $('.card-media img', card);
       if (!img) return;
       const r = card.getBoundingClientRect();

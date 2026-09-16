@@ -72,6 +72,9 @@ body[data-page=home] .header { transition: background-color .45s ease, transform
   .bento { gap: 10px; grid-template-areas: "a a a a a a a a a a a a" "b b b b b b b b b b b b" "c c c c c c c c c c c c" "d d d d d d d d d d d d" "e e e e e e e e e e e e" "f f f f f f f f f f f f"; }
   .tile-a .tile-num { font-size: 64px; }
 }
+@media (max-width: 900px), (pointer: coarse) {
+  .ticker-track { animation-duration: 70s; }
+}
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; }
 }
