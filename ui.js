@@ -136,20 +136,24 @@ $$('.gallery-track').forEach((track) => {
   const bar = track.parentElement.querySelector('.gallery-progress span');
   const buttons = $$('.gallery-btn', track.closest('section') || document);
   let dragging = false, moved = false, startX = 0, startLeft = 0;
+  /* Указатель захватывается только после начала реального перетаскивания: захват при нажатии
+     переадресовывал бы click на дорожку, и клики по карточкам и ссылкам внутри не срабатывали. */
   track.addEventListener('pointerdown', (e) => {
     if (e.pointerType !== 'mouse' || e.button !== 0) return;
     dragging = true; moved = false; startX = e.clientX; startLeft = track.scrollLeft;
-    track.setPointerCapture(e.pointerId);
   });
   track.addEventListener('pointermove', (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
-    if (Math.abs(dx) > 4) { moved = true; track.classList.add('is-dragging'); }
-    track.scrollLeft = startLeft - dx;
+    if (!moved && Math.abs(dx) > 4) { moved = true; track.classList.add('is-dragging'); try { track.setPointerCapture(e.pointerId); } catch (_) {} }
+    if (moved) track.scrollLeft = startLeft - dx;
   });
+  /* Нативное перетаскивание картинок и ссылок отменяло прокрутку галереи мышью. */
+  track.addEventListener('dragstart', (e) => e.preventDefault());
   const release = () => { if (!dragging) return; dragging = false; track.classList.remove('is-dragging'); };
   track.addEventListener('pointerup', release);
   track.addEventListener('pointercancel', release);
+  addEventListener('pointerup', release);
   track.addEventListener('click', (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
   const stepBy = (dir) => {
     const width = cards[0] ? cards[0].getBoundingClientRect().width + 18 : track.clientWidth * .8;
