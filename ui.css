@@ -42,7 +42,7 @@ h2 { font-family: var(--serif); font-weight: 400; }
 
 /* ---------- Боковой указатель разделов (широкие экраны) ---------- */
 .side-index {
-  position: fixed; right: 12px; top: 50%; translate: 0 -50%; z-index: 30;
+  position: fixed; right: 12px; top: 50%; transform: translateY(-50%); z-index: 30;
   display: flex; flex-direction: column; gap: 10px;
   mix-blend-mode: difference; color: #fff;
 }
@@ -51,10 +51,10 @@ h2 { font-family: var(--serif); font-weight: 400; }
   font-size: 9px; letter-spacing: .12em; text-transform: uppercase; opacity: .55; transition: opacity .3s;
 }
 .side-index a { position: relative; }
-.side-index a em { position: absolute; right: calc(100% + 8px); top: 50%; translate: 0 -50%; white-space: nowrap; font-style: normal; opacity: 0; transform: translateX(6px); transition: opacity .3s, transform .4s var(--ease); pointer-events: none; }
+.side-index a em { position: absolute; right: calc(100% + 8px); top: 50%; white-space: nowrap; font-style: normal; opacity: 0; transform: translate(6px, -50%); transition: opacity .3s, transform .4s var(--ease); pointer-events: none; }
 .side-index a span { order: 2; }
 .side-index a::after { order: 3; content: ""; width: 10px; height: 1px; background: currentColor; transition: width .4s var(--ease); }
-.side-index:hover a em, .side-index a:focus-visible em { opacity: 1; transform: none; }
+.side-index:hover a em, .side-index a:focus-visible em { opacity: 1; transform: translateY(-50%); }
 .side-index a.is-active { opacity: 1; }
 .side-index a.is-active::after { width: 16px; }
 .footer { border-top: 1px solid #3d3b35; }
@@ -102,11 +102,11 @@ html.js .reveal.in { opacity: 1; transform: none; }
 
 /* ---------- Hero (главная и внутренние страницы) ---------- */
 .hero {
-  position: relative; min-height: 100svh; display: grid; align-items: end;
+  position: relative; min-height: 100vh; min-height: 100svh; display: grid; align-items: end;
   color: var(--paper); background: var(--ink); overflow: hidden; isolation: isolate;
 }
-.hero-page { min-height: min(78svh, 860px); }
-.hero-dark { min-height: min(64svh, 720px); }
+.hero-page { min-height: min(78vh, 860px); min-height: min(78svh, 860px); }
+.hero-dark { min-height: min(64vh, 720px); min-height: min(64svh, 720px); }
 .hero-media { position: absolute; inset: -1px 0 0; z-index: -2; transform: translate3d(0, calc(var(--sy) * .28px), 0); will-change: transform; }
 .hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: 52% 46%; animation: hero-zoom 9s var(--ease) both; }
 @keyframes hero-zoom { from { transform: scale(1.14); } to { transform: scale(1); } }
@@ -377,7 +377,7 @@ html.js .tl-item.in > div { opacity: 1; transform: none; }
   .manifesto { display: block; }
   .manifesto-aside { margin-top: 36px; }
   .tour-layout { display: block; }
-  .tour-visual { position: sticky; top: 0; height: 50svh; z-index: 3; }
+  .tour-visual { position: sticky; top: 0; height: 50vh; height: 50svh; z-index: 3; }
   .tour-frame { border-radius: 0 0 var(--radius) var(--radius); }
   .tour-steps { padding-top: 28px; }
   .tour-step { min-height: auto; padding: 30px 0; opacity: 1; }

@@ -14,12 +14,14 @@ function closeMenu(){menu?.setAttribute('aria-expanded','false');menu?.setAttrib
 menu?.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));menu.setAttribute('aria-label',open?'Закрыть меню':'Открыть меню');document.body.classList.toggle('menu-open',open);if(open)$('#main-nav a')?.focus();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&menu?.getAttribute('aria-expanded')==='true'){closeMenu();menu.focus();}});
 $('#main-nav')?.addEventListener('click',e=>{if(e.target.closest('a'))closeMenu();});
-matchMedia('(min-width: 651px)').addEventListener('change',e=>{if(e.matches)closeMenu();});
+const wide=matchMedia('(min-width: 651px)');const onWide=e=>{if(e.matches)closeMenu();};
+if(wide.addEventListener)wide.addEventListener('change',onWide);else if(wide.addListener)wide.addListener(onWide);
 
 /* ---------- Просмотр изображений ---------- */
 const dialog = $('.lightbox');
 let lastFocus;
-function showImage(src,alt,caption){lastFocus=document.activeElement;dialog.querySelector(':scope > img').src=src;dialog.querySelector(':scope > img').alt=alt;dialog.querySelector('p').textContent=caption;dialog.showModal();document.body.classList.add('modal-open');}
+const canDialog=!!(dialog&&typeof dialog.showModal==='function');
+function showImage(src,alt,caption){if(!canDialog){window.open(src,'_blank','noopener');return;}lastFocus=document.activeElement;dialog.querySelector(':scope > img').src=src;dialog.querySelector(':scope > img').alt=alt;dialog.querySelector('p').textContent=caption;dialog.showModal();document.body.classList.add('modal-open');}
 function closeImage(){dialog.close();}
 dialog?.addEventListener('close',()=>{document.body.classList.remove('modal-open');lastFocus?.focus();});
 $('.close-lightbox')?.addEventListener('click',closeImage);
