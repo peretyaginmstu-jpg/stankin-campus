@@ -1,0 +1,173 @@
+/* Версия для слабовидящих (ГОСТ Р 52872-2019).
+   Включается классом html.vi; настройки — атрибуты data-vi-size (1|2|3), data-vi-theme (bw|wb|bb),
+   data-vi-images (on|gray|off), data-vi-spacing (0|1|2). В обычном режиме отсюда действуют только
+   стили кнопки-переключателя. */
+
+/* ---------- Переключатель в шапке и подвале ---------- */
+.vi-toggle {
+  display: inline-flex; align-items: center; gap: 8px; min-height: 34px; padding: 0 12px;
+  border: 1px solid rgba(243, 239, 230, .45); border-radius: 999px; background: transparent; color: var(--paper);
+  font: 500 12px/1 var(--sans); letter-spacing: .02em; white-space: nowrap; cursor: pointer; transition: border-color .3s, background-color .3s;
+}
+.vi-toggle svg { width: 16px; height: 16px; flex-shrink: 0; }
+.vi-toggle:hover { border-color: var(--paper); background: rgba(243, 239, 230, .12); }
+.vi-toggle-text { min-height: auto; padding: 0; border: 0; border-radius: 0; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
+.vi-toggle-text svg { display: none; }
+.vi-toggle-text:hover { background: none; }
+@media (max-width: 1200px) {
+  .header .vi-toggle { width: 36px; padding: 0; justify-content: center; }
+  .header .vi-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+.vi-panel { display: none; }
+
+/* ---------- Переменные режима ---------- */
+html.vi { --vi-bg: #fff; --vi-fg: #000; --vi-scale: 1; --vi-ls: 0; --vi-lh: 1.6; font-size: calc(18px * var(--vi-scale)); scroll-behavior: auto; }
+html.vi[data-vi-size="2"] { --vi-scale: 1.4; }
+html.vi[data-vi-size="3"] { --vi-scale: 1.8; }
+html.vi[data-vi-theme="wb"] { --vi-bg: #000; --vi-fg: #fff; }
+html.vi[data-vi-theme="bb"] { --vi-bg: #9dd1ff; --vi-fg: #063462; }
+html.vi[data-vi-spacing="1"] { --vi-ls: .06em; --vi-lh: 1.8; }
+html.vi[data-vi-spacing="2"] { --vi-ls: .12em; --vi-lh: 2; }
+
+/* ---------- Цвет, шрифт, отсутствие движения ---------- */
+html.vi body, html.vi body *, html.vi body *::before, html.vi body *::after { animation: none !important; transition: none !important; }
+html.vi body, html.vi body * {
+  background-color: var(--vi-bg) !important; color: var(--vi-fg) !important; background-image: none !important;
+  box-shadow: none !important; text-shadow: none !important; border-color: var(--vi-fg) !important;
+  font-family: "Golos Text", Arial, sans-serif !important; font-weight: 400; letter-spacing: var(--vi-ls) !important; line-height: var(--vi-lh) !important;
+  opacity: 1 !important; transform: none !important; translate: none !important; scale: none !important; filter: none !important;
+  mix-blend-mode: normal !important; -webkit-text-stroke: 0 !important; text-wrap: pretty; overflow-wrap: anywhere;
+}
+html.vi body :is(img, svg, video, canvas) { background-color: transparent !important; }
+html.vi body :is([aria-pressed="true"], [aria-current="page"], .btn, .pills button, .vi-panel button) * { background-color: transparent !important; color: inherit !important; }
+html.vi body :is(h1, h2, h3, strong, b, dt, .p-title, .tile-num, .now-date, .vi-label, .object-card-name, summary) { font-weight: 700 !important; }
+html.vi body :is(h1, h2, h3) { line-height: 1.25 !important; margin-bottom: .75rem; }
+html.vi body { font-size: 1rem !important; }
+html.vi body h1, html.vi body .hero-title { font-size: min(2.3rem, 11vw) !important; }
+html.vi body h2 { font-size: min(1.8rem, 9vw) !important; }
+html.vi body h3, html.vi body .p-title { font-size: 1.3rem !important; }
+html.vi body :is(h1, h2, h3) * { font-size: inherit !important; }
+html.vi body :is(p, li, dd, td, th, label, summary, a, button, .btn, .hero-lede, .section-note, .manifesto-aside, .tile-desc, .card-text, .legend li, .tl-item p, .now-next li, .tile-steps li, .location-copy p, .feature-copy p, .sports-copy p, .fold > div p, .fold > div li, .object-detail p, .notice, .sources table, .vi-panel button, .pills button, .chips li) { font-size: 1rem !important; }
+html.vi body :is(.eyebrow, figcaption, .source-note, .source-link, .hero-caption, .map-caption, .detail-caption, .object-status, .journal-credit, .kind, .tile-label, .card-index, .tour-index, .flow-index, .fold-index, .material-index, .p-index, .p-sub, .story-tag, .hero-eyebrow, .header nav a, .header-note, .footer-bottom, .footer-top a, .footer-top .eyebrow, .breadcrumb, .roadmap-note, .filter-status, .gallery-hint, .explorer-hint, .object-card-metric, .object-card-index, .hero-stats dd, .metrics dd, .object-metrics span, .now-days small, .vi-alt, .sources-note, .muted) { font-size: .9rem !important; text-transform: none !important; letter-spacing: var(--vi-ls) !important; }
+html.vi body :is(.manifesto-text) { font-size: 1.4rem !important; line-height: 1.4 !important; }
+html.vi body :is(.tile-num, .metrics dt, .hero-stats dt, .now-date, .now-days span, .object-metrics strong, .tile-steps li span, .now-next li span, .tl-item time, .pub-list span, .sources tbody th) { font-size: 1.6rem !important; line-height: 1.2 !important; }
+html.vi body :is(.tile-num small, .metrics dt small, .hero-stats dt span) { font-size: .6em !important; }
+html.vi body a { text-decoration: underline !important; text-underline-offset: .15em; }
+html.vi body :is(a, button, summary, [tabindex]):focus-visible { outline: 3px solid var(--vi-fg) !important; outline-offset: 3px !important; }
+html.vi body :is(.btn, .pills button, .gallery-btn, .expand-map, .vi-toggle, .vi-panel button, .process-item button, .close-lightbox) { border: 2px solid var(--vi-fg) !important; border-radius: 6px !important; }
+html.vi body .btn { display: inline-flex; margin: .25rem .75rem .25rem 0; padding: .5rem 1rem !important; min-height: 0 !important; }
+html.vi body :is([aria-pressed="true"], .object-card.selected .object-card-name, [aria-current="page"]) { background-color: var(--vi-fg) !important; color: var(--vi-bg) !important; }
+html.vi body .btn::before, html.vi body .btn-ink::before, html.vi body .btn-paper::before { display: none !important; }
+
+/* ---------- Декоративные элементы скрыты ---------- */
+html.vi .scroll-progress, html.vi .side-index, html.vi .ticker, html.vi .scroll-cue, html.vi .hero-scrim, html.vi .hero-watermark, html.vi .sheet-watermark, html.vi .finale-watermark, html.vi .finale-media,
+html.vi .hero::after, html.vi .finale::after, html.vi .finale::before, html.vi .sheet::after, html.vi .making::after, html.vi .sheet::before, html.vi .making::before,
+html.vi .map-hotspots, html.vi .gallery-nav, html.vi .gallery-progress, html.vi .tour-progress, html.vi .roadmap-scroll, html.vi .roadmap-note, html.vi .tile-image::after, html.vi .image-zoom, html.vi .hotspot-dot::before,
+html.vi .tl::before, html.vi .tl::after, html.vi .tl-item::before, html.vi .flow-steps::before, html.vi .flow-steps::after, html.vi .flow-step::before, html.vi .header-note, html.vi .menu-toggle, html.vi .process-item .icon, html.vi .hero-eyebrow i { display: none !important; }
+
+/* ---------- Шапка и подвал ---------- */
+html.vi .header { position: static !important; height: auto !important; flex-wrap: wrap; gap: .75rem 1.5rem !important; padding-block: .75rem !important; border-bottom: 2px solid var(--vi-fg); }
+html.vi .header nav { display: flex !important; flex-wrap: wrap; gap: .5rem 1.25rem; margin-left: auto; width: auto; position: static !important; padding: 0 !important; border: 0 !important; }
+html.vi .header nav a { padding: .25rem 0 !important; }
+html.vi .brand-sub { display: inline !important; }
+html.vi .official-logo, html.vi .footer-logo { width: 150px !important; }
+html.vi[data-vi-theme="bw"] :is(.official-logo, .footer-logo), html.vi[data-vi-theme="bb"] :is(.official-logo, .footer-logo) { filter: invert(1) !important; }
+html.vi[data-vi-theme="wb"] body .icon { filter: invert(1) !important; }
+html.vi body [aria-pressed="true"] .icon, html.vi body .btn .icon { filter: none !important; }
+html.vi[data-vi-theme="wb"] body :is([aria-pressed="true"], .btn) .icon { filter: none !important; }
+html.vi[data-vi-theme="bw"] body [aria-pressed="true"] .icon, html.vi[data-vi-theme="bb"] body [aria-pressed="true"] .icon { filter: invert(1) !important; }
+html.vi .footer { border-top: 2px solid var(--vi-fg); padding: 2rem var(--gutter) 1rem !important; }
+html.vi .footer-top { display: block !important; padding-bottom: 1rem !important; }
+html.vi .footer-top > div { margin-top: 1.5rem; }
+html.vi .footer-bottom { display: block !important; }
+html.vi .footer-bottom > * { display: block; margin: .5rem 0; }
+
+/* ---------- Панель настроек ---------- */
+html.vi .vi-panel { display: flex !important; flex-wrap: wrap; gap: 1rem 2rem; align-items: center; padding: 1rem var(--gutter); border-bottom: 3px solid var(--vi-fg); }
+html.vi .vi-group { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+html.vi .vi-label { margin-right: .25rem; }
+html.vi .vi-panel button { min-height: 2.6rem; padding: .3rem .8rem !important; cursor: pointer; }
+html.vi .vi-panel button[aria-pressed="true"] { outline: 3px solid var(--vi-fg) !important; outline-offset: 2px; }
+html.vi .vi-panel button[data-vi="size"][data-value="2"] { font-size: 1.25rem !important; }
+html.vi .vi-panel button[data-vi="size"][data-value="3"] { font-size: 1.5rem !important; }
+html.vi .vi-panel button[data-vi="theme"][data-value="bw"] { background-color: #fff !important; color: #000 !important; border-color: #000 !important; }
+html.vi .vi-panel button[data-vi="theme"][data-value="wb"] { background-color: #000 !important; color: #fff !important; border-color: #fff !important; box-shadow: 0 0 0 1px #000 !important; }
+html.vi .vi-panel button[data-vi="theme"][data-value="bb"] { background-color: #9dd1ff !important; color: #063462 !important; border-color: #063462 !important; }
+
+/* ---------- Линейная раскладка ---------- */
+html.vi .wrap, html.vi .hero-content, html.vi .gallery-foot, html.vi .objects .gallery { max-width: 1200px; }
+html.vi .hero { min-height: 0 !important; display: block !important; }
+html.vi .hero-media { position: static !important; inset: auto !important; }
+html.vi .hero-media img { width: 100% !important; height: auto !important; max-height: 60vh; object-fit: cover; }
+html.vi .hero-content { padding: 1.5rem 0 !important; }
+html.vi .hero-title { max-width: none !important; white-space: normal !important; }
+html.vi .hero-title .w, html.vi .hero-title .w > span { display: inline !important; overflow: visible !important; padding: 0 !important; margin: 0 !important; }
+html.vi .hero-row, html.vi .hero-bar, html.vi .hero-stats, html.vi .hero-side, html.vi .hero-actions { display: block !important; }
+html.vi .hero-stats div { max-width: none !important; margin: 0 0 1rem; }
+html.vi .hero-bar { margin-top: 1rem !important; padding-top: 1rem !important; border-top: 2px solid var(--vi-fg) !important; }
+html.vi .manifesto, html.vi .bento, html.vi .tour-layout, html.vi .making-layout, html.vi .feature-layout, html.vi .location-layout, html.vi .sports-layout, html.vi .now-layout, html.vi .note-body, html.vi .learning-grid, html.vi .story-grid, html.vi .material-grid, html.vi .flow-steps, html.vi .explorer-layout, html.vi .tl-item, html.vi .section-head, html.vi .tile-steps, html.vi .object-strip, html.vi .metrics, html.vi .object-metrics, html.vi .making-foot, html.vi .explorer-toolbar, html.vi .legend li, html.vi .card-text, html.vi .object-card-text, html.vi .process-item button, html.vi .fold summary, html.vi .pub-list a, html.vi .now-days { display: block !important; }
+html.vi .manifesto, html.vi .facts, html.vi .tour, html.vi .life, html.vi .timeline, html.vi .objects, html.vi .explorer, html.vi .learning, html.vi .flow, html.vi .research, html.vi .around, html.vi .faq, html.vi .roadmap-section, html.vi .note, html.vi .sources, html.vi .materials, html.vi .publications { padding: 1.5rem 0 !important; }
+html.vi .section-head h2 { margin-bottom: .5rem !important; }
+html.vi .section-note { max-width: none !important; margin: 0 0 1rem !important; }
+html.vi .manifesto-aside { max-width: none !important; margin-top: 1rem; }
+html.vi :is(.bento > .tile, .card, .story-card, .material, .flow-step, .learning-grid .tile, .tour-step, .object-card, .tile-steps li, .sports-main, .sports-aerial, .tl-item, .pub-list li, .fold, .process-item) { margin: 0 0 1.25rem !important; width: auto !important; max-width: none !important; min-height: 0 !important; flex: none !important; }
+html.vi .tile, html.vi .story-card, html.vi .material, html.vi .object-detail, html.vi .table-scroll, html.vi .notice { border: 2px solid var(--vi-fg) !important; border-radius: 8px !important; padding: 1rem !important; }
+html.vi .tile-image > img { position: static !important; width: 100% !important; height: auto !important; margin-bottom: .75rem; }
+html.vi .tile-cover, html.vi .card-cover { position: static !important; display: inline-block; text-decoration: underline; }
+html.vi .tile-cover::after { content: "Подробнее"; }
+html.vi .card-cover::after { content: "Открыть публикацию"; }
+html.vi .tour-visual { position: static !important; height: auto !important; }
+html.vi .tour-frame { height: auto !important; border-radius: 0 !important; }
+html.vi .tour-fig, html.vi .making-fig { position: static !important; visibility: visible !important; margin: 0 0 1rem !important; }
+html.vi .tour-fig img, html.vi .making-fig img, html.vi .card-media img, html.vi .object-card-media img, html.vi .location-map img, html.vi .sports-main img, html.vi .sports-aerial img, html.vi .feature-figure img { width: 100% !important; height: auto !important; object-position: center !important; }
+html.vi .tour-fig figcaption, html.vi .making-fig figcaption, html.vi .feature-figure figcaption, html.vi .sports-main figcaption, html.vi .sports-aerial figcaption { position: static !important; padding-top: .5rem !important; }
+html.vi .tour-steps { padding-top: 0 !important; }
+html.vi .tour-step { padding: 1rem 0 !important; border-top: 2px solid var(--vi-fg) !important; }
+html.vi .making-visual, html.vi .feature-figure, html.vi .card-media, html.vi .object-card-media, html.vi .making-visual { aspect-ratio: auto !important; border-radius: 0 !important; }
+html.vi .p-body { display: block !important; grid-template-rows: none !important; }
+html.vi .p-body > div { overflow: visible !important; }
+html.vi .p-body p { padding: 0 0 1rem !important; }
+html.vi .process-item button { padding: .75rem 0 !important; }
+html.vi .gallery-track { display: block !important; overflow: visible !important; padding: 0 !important; scroll-snap-type: none !important; cursor: auto !important; }
+html.vi .object-card { display: block !important; }
+html.vi .object-card.selected .object-card-media { outline: 4px solid var(--vi-fg) !important; outline-offset: 0 !important; }
+html.vi .map-column { position: static !important; }
+html.vi .map-canvas { border-radius: 0 !important; }
+html.vi .object-detail { margin-top: 1.5rem; }
+html.vi .object-selector { margin-top: 1rem; }
+html.vi .pills { gap: .5rem !important; }
+html.vi .pills button { padding: .4rem .8rem !important; }
+html.vi .sheet, html.vi .making, html.vi .finale { border-radius: 0 !important; border-top: 2px solid var(--vi-fg) !important; padding: 1.5rem 0 !important; margin-top: 0 !important; }
+html.vi .finale { min-height: 0 !important; display: block !important; }
+html.vi .finale-content { padding: .5rem 0 !important; }
+html.vi .finale h2 { max-width: none !important; margin-bottom: 1rem !important; }
+html.vi .fold summary { padding: .75rem 0 !important; }
+html.vi .fold summary .icon { display: none !important; }
+html.vi .fold summary::before { content: "+ "; }
+html.vi .fold[open] summary::before { content: "− "; }
+html.vi .fold > div { padding: 0 0 1rem !important; }
+html.vi .tl-item { padding: 1rem 0 !important; }
+html.vi .flow-step { padding: 0 !important; }
+html.vi .table-scroll { overflow: visible !important; }
+html.vi .sources table { min-width: 0 !important; }
+html.vi .sources :is(th, td) { padding: .5rem 1rem .5rem 0 !important; }
+html.vi .legend { margin-top: 1rem; }
+html.vi .location-map, html.vi .location-map figcaption { border-radius: 0 !important; }
+html.vi .lightbox { border: 3px solid var(--vi-fg) !important; }
+html.vi .menu-open .header nav { position: static !important; }
+html.vi .mobile-object-summary { position: static !important; border: 2px solid var(--vi-fg); border-radius: 6px !important; }
+
+/* ---------- Изображения ---------- */
+html.vi[data-vi-images="off"] body img:not(.official-logo):not(.footer-logo):not(.icon) { display: none !important; }
+html.vi[data-vi-images="gray"] body img:not(.icon):not(.official-logo):not(.footer-logo) { filter: grayscale(1) !important; }
+html.vi[data-vi-theme="wb"][data-vi-images="gray"] body .icon { filter: invert(1) !important; }
+.vi-alt { display: none; }
+html.vi[data-vi-images="off"] .vi-alt { display: block; margin: .5rem 0; padding: .5rem .75rem; border: 2px dashed var(--vi-fg) !important; }
+
+@media (max-width: 650px) {
+  html.vi .header nav { width: 100%; margin-left: 0; }
+  html.vi .vi-panel { padding: .75rem var(--gutter); gap: .75rem 1.25rem; }
+}
+@media print {
+  .vi-toggle, .vi-panel { display: none !important; }
+}

@@ -7,7 +7,7 @@ const root = document.documentElement;
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 /* Облегчённый режим: телефоны и сенсорные экраны — без эффектов, привязанных к прокрутке. */
 const lite = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
-const still = () => reduced.matches || lite;
+const still = () => reduced.matches || lite || root.classList.contains('vi');
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
 const format = (n) => n.toLocaleString('ru-RU');
 
