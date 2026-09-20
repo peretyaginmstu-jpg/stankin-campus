@@ -4,7 +4,9 @@
    фильтры хроники, источники и 404. Общие компоненты — в ui.css. */
 
 body:not([data-page=home]) main { font-family: var(--sans); color: var(--ink); }
-body:not([data-page=home]) main h3 { margin: 0; font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.1vw, 34px); line-height: 1.2; letter-spacing: -.03em; text-wrap: balance; }
+/* Без margin: заголовки и так обнулены глобально в styles.css, а здесь этот сброс перебивал
+   авторские отступы у .tour-step h3 и .card h3 — заголовок слипался с первой строкой текста. */
+body:not([data-page=home]) main h3 { font-family: var(--serif); font-weight: 400; font-size: clamp(24px, 2.1vw, 34px); line-height: 1.2; letter-spacing: -.03em; text-wrap: balance; }
 body:not([data-page=home]) main :is(p, li) { text-wrap: pretty; }
 .objects, .learning, .flow, .research, .around, .faq, .roadmap-section, .timeline, .note, .sources, .materials, .publications { padding: clamp(70px, 8vw, 120px) 0; }
 .objects { padding-bottom: clamp(30px, 4vw, 60px); }
@@ -122,6 +124,9 @@ body:not([data-page=home]) main .object-detail h2 { margin: 0 0 22px; font-size:
 @keyframes drift { from { transform: scale(1.02); } to { transform: scale(1.1); } }
 .feature-figure figcaption { position: absolute; left: 18px; right: 18px; bottom: 16px; padding: 0; font-size: 12px; color: #e6e1d6; text-shadow: 0 1px 10px rgba(0, 0, 0, .6); }
 .feature-copy p { max-width: 520px; margin: 0 0 24px; font-size: 16px; line-height: 1.7; color: #d4d0c6; }
+/* Без ограничения заголовок раздела 04 занимал всю ширину и выталкивал пояснение под себя,
+   тогда как в разделах 02/03/05 оно стоит справа. */
+.flow .section-head > div { max-width: 760px; }
 .flow-steps { position: relative; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 32px; }
 .flow-steps::before, .flow-steps::after { content: ""; position: absolute; left: 0; right: 0; top: 11px; height: 1px; background: var(--line); }
 .flow-steps::after { background: var(--accent); transform: scaleX(var(--tl, 0)); transform-origin: left; }
@@ -172,15 +177,18 @@ html.js .reveal.in .chips li { opacity: 1; transform: none; }
 .roadmap-progress { position: absolute; left: 0; top: 0; height: 100%; width: calc(var(--today, 0) * 100%); background: var(--accent); transition: width 1.4s var(--ease); }
 .roadmap-year { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); top: 328px; transform: translateX(-50%); font-family: var(--serif); font-size: 20px; color: var(--muted); }
 .roadmap-year::before { content: ""; position: absolute; left: 50%; top: -18px; width: 1px; height: 10px; background: var(--line); }
-.roadmap-marker { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); bottom: calc(100% - 310px + var(--lift, 0px)); width: 124px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; translate: 0 8px; transition: opacity .6s var(--ease), translate .6s var(--ease); transition-delay: calc(.3s + var(--i, 0) * 120ms); }
-.roadmap-marker[data-level="1"] { --lift: 58px; }
-.roadmap-marker[data-level="2"] { --lift: 116px; }
-.roadmap-marker[data-level="3"] { --lift: 174px; }
+.roadmap-marker { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); bottom: calc(100% - 310px + var(--lift, 0px)); width: 136px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; translate: 0 8px; transition: opacity .6s var(--ease), translate .6s var(--ease); transition-delay: calc(.3s + var(--i, 0) * 120ms); }
+/* Шаг между ярусами был меньше высоты подписи (66px), и точка верхней отметки садилась на дату нижней. */
+.roadmap-marker[data-level="1"] { --lift: 74px; }
+.roadmap-marker[data-level="2"] { --lift: 148px; }
+.roadmap-marker[data-level="3"] { --lift: 222px; }
 html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translate: none; }
 .roadmap-marker i { position: relative; order: 3; display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 1px solid var(--accent); margin-top: 10px; translate: 0 6px; }
 .roadmap-marker i::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: var(--lift, 0px); background: var(--line); }
 .roadmap-marker[data-kind=plan] i { background: var(--paper); }
 .roadmap-date { order: 1; font-family: var(--serif); font-size: 17px; letter-spacing: -.02em; }
+/* Подложка цветом страницы: стойки соседних отметок проходят позади подписи, а не сквозь неё. */
+.roadmap-date, .roadmap-text { position: relative; background: var(--paper); padding: 0 6px; }
 .roadmap-marker[data-kind=plan] .roadmap-date { color: var(--accent); }
 .roadmap-text { order: 2; margin-top: 3px; font-size: 10px; line-height: 1.35; color: var(--muted); }
 .roadmap-today { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); top: 312px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
@@ -198,6 +206,7 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
 .sources tbody tr:last-child :is(th, td) { border-bottom: 0; }
 .sources thead th { font-size: 10px; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .sources tbody th { width: 30%; font: 400 clamp(22px, 2vw, 30px)/1.3 var(--serif); letter-spacing: -.03em; }
+@media (min-width: 701px) { html[lang^="zh"] .sources tbody th { width: 34%; } }
 .sources td:nth-child(2) { color: var(--muted); }
 .material-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
 .material { display: flex; flex-direction: column; gap: 14px; padding: 28px; border-radius: var(--radius); background: var(--paper-2); transition: transform .7s var(--ease); }
@@ -214,7 +223,10 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
 .pub-list a:hover .icon { transform: translate(3px, -3px); }
 .media-list span em { display: block; margin-bottom: 4px; font: 500 11px/1.4 var(--sans); letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
 .media-list span { font-size: clamp(18px, 1.5vw, 24px); }
-.media { padding-top: 0; }
+/* Дата встаёт на строку названия издания, как в списке публикаций выше. */
+.media-list a { align-items: baseline; }
+.media-list .icon { align-self: center; }
+.media { padding-top: 0; padding-bottom: clamp(70px, 8vw, 120px); }
 .sources-note { max-width: 760px; margin-top: 24px; font-size: 13px; line-height: 1.6; }
 
 /* ---------- Адаптив ---------- */
@@ -226,7 +238,8 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
 .metrics-wide { display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 26px 44px; }
 .feature-copy .text-link + .text-link { margin-left: 28px; }
 .lab-list { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(6, auto); grid-auto-flow: column; column-gap: 56px; margin-top: 8px; }
-@media (max-width: 700px) { #labs-title { -webkit-hyphens: auto; hyphens: auto; overflow-wrap: break-word; } } /* «высокоэффективных» не помещается в строку на телефоне */
+/* «Лаборатории кафедры высокоэффективных технологий обработки» на телефоне рвалось тремя переносами подряд. */
+@media (max-width: 700px) { #labs-title { font-size: clamp(26px, 7.2vw, 32px); overflow-wrap: break-word; } }
 .lab-links { display: flex; flex-wrap: wrap; gap: 14px 36px; margin-top: 40px; }
 .contact-card { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; max-width: 760px; }
 .contact-card p { margin: 0; font-size: 17px; line-height: 1.65; color: #d4d0c6; }

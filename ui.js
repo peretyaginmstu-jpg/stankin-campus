@@ -58,26 +58,60 @@ const hero = $('.hero');
 const rails = $$('.tl, .flow-steps').map((el) => ({ el, items: [...el.children] }));
 const finale = $('.finale');
 const progress = $('.scroll-progress');
+const sideIndex = $('.side-index');
+/* Указатель разделов нарисован инверсией цвета: на ровном фоне это читается, а поверх фотографии
+   по среднему серому даёт серое — цифры исчезают. Поэтому над снимками он прячется. */
+const MEDIA_TAGS = /^(img|picture|video|canvas|svg)$/;
+/* Списком классов такое не покрыть — снимок может оказаться под указателем в любом разделе.
+   Поэтому смотрим, что лежит под каждой ссылкой: сам снимок или фон-картинка у любого предка.
+   Горизонтальная галерея — отдельный случай: она одна тянет текст до самого края окна, и её
+   подписи попадали прямо под цифры указателя (проверено на главной, «Жизни» и «Партнёрам»). */
+function hidesIndex(el) {
+  for (let n = el; n && n !== root; n = n.parentElement) {
+    if (MEDIA_TAGS.test(n.tagName.toLowerCase())) return true;
+    if (n.classList && n.classList.contains('gallery-track')) return true;
+    if (getComputedStyle(n).backgroundImage.includes('url(')) return true;
+  }
+  return false;
+}
+let lastMediaY = -1e6, overMedia = false;
+function indexOverMedia() {
+  const links = sideIndex ? [...sideIndex.querySelectorAll('a')] : [];
+  if (!links.length) return false;
+  if (Math.abs(scrollY - lastMediaY) < 40) return overMedia; /* проверка не из дешёвых — не чаще чем раз в 40 px */
+  lastMediaY = scrollY;
+  overMedia = links.some((a) => {
+    const r = a.getBoundingClientRect();
+    return document.elementsFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+      .some((el) => !el.closest('.side-index') && hidesIndex(el));
+  });
+  return overMedia;
+}
 const cssScrollTimeline = CSS.supports('animation-timeline: scroll()');
 let ticking = false;
 
 function update() {
   ticking = false;
   const y = scrollY, vh = innerHeight;
-  if (!still() && hero) root.style.setProperty('--sy', Math.min(y, vh * 1.2).toFixed(1));
+  /* Затухание и параллакс героя рассчитаны на длинную страницу. На короткой (404) прокрутки не
+     хватает, и заголовок навсегда остаётся приглушённым, поэтому там --sy не трогаем. */
+  if (!still() && hero && root.scrollHeight > vh * 1.9) root.style.setProperty('--sy', Math.min(y, vh * 1.2).toFixed(1));
+  if (sideIndex) sideIndex.classList.toggle('is-over-media', indexOverMedia());
   if (progress && !cssScrollTimeline) {
     const max = root.scrollHeight - vh;
     progress.style.setProperty('--sp', max > 0 ? clamp01(y / max).toFixed(4) : 0);
   }
   if (!still()) manifestos.forEach(({ el, words }) => {
     const r = el.getBoundingClientRect();
-    const lit = Math.round(clamp01((vh * .8 - r.top) / (r.height + vh * .25)) * words.length);
+    /* Фраза догорает к моменту, когда блок оказывается в середине экрана: раньше при взгляде
+       прямо на неё оставалась непрочитанной четверть слов. */
+    const lit = Math.round(clamp01((vh * .85 - r.top) / (r.height * .75 + vh * .12)) * words.length);
     words.forEach((w, i) => w.classList.toggle('lit', i < lit));
   });
   rails.forEach(({ el, items }) => {
     const r = el.getBoundingClientRect();
     el.style.setProperty('--tl', clamp01((vh * .6 - r.top) / r.height).toFixed(4));
-    items.forEach((li) => li.classList.toggle('in', li.getBoundingClientRect().top < vh * .62));
+    items.forEach((li) => li.classList.toggle('in', li.getBoundingClientRect().top < vh * .85));
   });
   if (finale && !still()) {
     const r = finale.getBoundingClientRect();

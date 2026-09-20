@@ -63,7 +63,8 @@ html.vi body .btn::before, html.vi body .btn-ink::before, html.vi body .btn-pape
 html.vi .scroll-progress, html.vi .side-index, html.vi .ticker, html.vi .scroll-cue, html.vi .hero-scrim, html.vi .hero-watermark, html.vi .sheet-watermark, html.vi .finale-watermark, html.vi .finale-media,
 html.vi .hero::after, html.vi .finale::after, html.vi .finale::before, html.vi .sheet::after, html.vi .making::after, html.vi .sheet::before, html.vi .making::before,
 html.vi .map-hotspots, html.vi .gallery-nav, html.vi .gallery-progress, html.vi .tour-progress, html.vi .roadmap-scroll, html.vi .roadmap-note, html.vi .tile-image::after, html.vi .image-zoom, html.vi .hotspot-dot::before,
-html.vi .tl::before, html.vi .tl::after, html.vi .tl-item::before, html.vi .flow-steps::before, html.vi .flow-steps::after, html.vi .flow-step::before, html.vi .header-note, html.vi .menu-toggle, html.vi .process-item .icon, html.vi .hero-eyebrow i { display: none !important; }
+html.vi .tl::before, html.vi .tl::after, html.vi .tl-item::before, html.vi .flow-steps::before, html.vi .flow-steps::after, html.vi .flow-step::before, html.vi .header-note, html.vi .menu-toggle, html.vi .process-item .icon, html.vi .hero-eyebrow i,
+html.vi .tour-fig::after, html.vi .making-fig::after, html.vi .feature-figure::after, html.vi .sports-main::after, html.vi .sports-aerial::after { display: none !important; }
 
 /* ---------- Шапка и подвал ---------- */
 html.vi .header { position: static !important; height: auto !important; flex-wrap: wrap; gap: .75rem 1.5rem !important; padding-block: .75rem !important; border-bottom: 2px solid var(--vi-fg); }

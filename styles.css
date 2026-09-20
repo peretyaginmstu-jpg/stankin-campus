@@ -25,7 +25,7 @@
 @media(max-width:650px){.official-logo{width:135px}.brand-sub{display:block;font-size:11px}.brand{gap:14px}.footer-logo{width:198px}.footer-title span{margin-top:15px}}
 /* ---------- Переключатель языка (RU · EN · 中文): обычные ссылки на ту же страницу в другом языковом дереве ---------- */
 .lang-switch{display:inline-flex;align-items:center;gap:2px;font:500 12px/1 var(--sans);letter-spacing:.06em;white-space:nowrap}
-.lang-switch a,.header nav .lang-switch a{padding:7px 9px;border-radius:999px;color:#c4c0b8;text-decoration:none;transition:color .3s,background-color .3s}
+.lang-switch a,.header nav .lang-switch a{padding:7px 9px;border-radius:999px;color:#ded9cf;text-decoration:none;transition:color .3s,background-color .3s}
 .lang-switch a:hover,.header nav .lang-switch a:hover{color:var(--paper);text-decoration:none}
 .lang-switch a[aria-current],.header nav .lang-switch a[aria-current]{color:var(--ink);background:var(--paper)}
 .header nav .lang-switch{margin-left:4px}
@@ -49,10 +49,12 @@
    иероглифам она вредит. ---------- */
 html[lang^="zh"]{--serif:'Prata','Songti SC','STSong','Noto Serif CJK SC','Source Han Serif SC','SimSun',serif;--sans:'Golos Text','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC','Noto Sans SC',sans-serif}
 html[lang^="zh"] body{line-break:strict}
+html[lang^="zh"] .hero-title{line-height:1.2}
+html[lang^="zh"] .section-note{text-wrap:balance}
+html[lang^="zh"] .sheet-watermark{-webkit-text-stroke-color:rgba(243,239,230,.07)}
 html[lang^="zh"] :is(h1,h2,h3,.hero-title,.manifesto-text,.tile-num,.metrics dt,.hero-stats dt,.now-date,.now-next li span,.object-metrics strong,.object-card-name,.card h3,.p-title,.tl-item time,.tl-item h3,.sources tbody th,.pub-list span,.fold summary,.roadmap-date,.footer-title,.btn){letter-spacing:0}
 html[lang^="zh"] :is(.eyebrow,.tile-label,.story-tag,.side-index a,.scroll-cue,.ticker-track,.brand-sub){letter-spacing:.08em}
 html[lang^="zh"] :is(.eyebrow,.tile-label,.story-tag,.hero-caption,.scroll-cue,.card-index,.flow-index,.fold-index,.p-index,.p-sub){font-size:13px}
-/* Английская версия: длинные слова в узких колонках переносятся по слогам. */
-html[lang="en"] :is(p,li,dd,figcaption,.tile-desc,.section-note){-webkit-hyphens:auto;hyphens:auto}
-html[lang="en"] :is(.manifesto-text,.hero-lede,.tile-num,.contact-card p){-webkit-hyphens:manual;hyphens:manual}
+/* Переносы в английском выключены намеренно: они давали «de-sign», «infor-mation», «ar-eas»,
+   а без них ни один блок не переполняется (проверено на всех страницах при 1440 и 390 px). */
 
