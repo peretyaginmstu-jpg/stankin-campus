@@ -181,3 +181,7 @@ html.vi .lang-switch { gap: .5rem; letter-spacing: 0; }
 html.vi .lang-switch a, html.vi .header nav .lang-switch a { padding: .15rem .45rem !important; border-radius: 4px; color: var(--vi-fg) !important; background: none !important; }
 html.vi .lang-switch a[aria-current], html.vi .header nav .lang-switch a[aria-current] { border: 2px solid var(--vi-fg); text-decoration: none !important; }
 
+
+/* ---------- Стекло в этой версии не нужно ---------- */
+html.vi .header .lang-switch, html.vi .header .vi-toggle { background: none !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+html.vi .header .lang-switch { padding: 0 !important; border: 0 !important; border-radius: 0 !important; }

@@ -328,3 +328,15 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
   .table-scroll { overflow: visible; }
   .sources table { min-width: 0; }
 }
+
+/* ---------- Стекло: подписи точек на карте ----------
+   Нижнюю панель объекта на телефоне стеклом делать не стали: над светлой страницей тёмное стекло
+   сереет, и мелкая подпись в ней теряет контраст. */
+.hotspot-label {
+  background: rgba(37, 36, 32, .76); border: 1px solid rgba(243, 239, 230, .16);
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  box-shadow: 0 14px 30px -16px rgba(0, 0, 0, .6);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .hotspot-label { background: var(--ink); }
+}

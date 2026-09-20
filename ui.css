@@ -482,3 +482,36 @@ html.js .tl-item.in > div { opacity: 1; transform: none; }
   .hero-media { display: none; }
   .finale, .sheet, .making, .tile-dark { background: white; color: black; }
 }
+
+/* ---------- Стекло ----------
+   Приём на сайте уже был: шапка при прокрутке, кнопка-призрак и экран входа. Здесь он добавлен
+   только тем элементам, которые лежат поверх фотографии, — с теми же величинами, что у экрана
+   входа. Там, где под стеклом мелкий светлый текст, подложка плотная (от .76): контраст важнее
+   прозрачности. Без поддержки backdrop-filter остаётся обычная полупрозрачная плашка. */
+@media (min-width: 961px) {
+  .header .lang-switch {
+    padding: 3px; border-radius: 999px;
+    /* Тёмное стекло, а не светлое: светлая подложка опускала контраст «EN / 中文» над небом до 4,4. */
+    background: rgba(37, 36, 32, .3); border: 1px solid rgba(243, 239, 230, .2);
+    -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3);
+  }
+}
+.header .vi-toggle {
+  background: rgba(37, 36, 32, .3); border-color: rgba(243, 239, 230, .3);
+  -webkit-backdrop-filter: blur(12px) saturate(1.3); backdrop-filter: blur(12px) saturate(1.3);
+}
+.header .vi-toggle:hover { background: rgba(243, 239, 230, .18); border-color: rgba(243, 239, 230, .6); }
+.image-zoom {
+  border-radius: 12px; background: rgba(243, 239, 230, .66); border: 1px solid rgba(255, 255, 255, .55);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5); backdrop-filter: blur(12px) saturate(1.5);
+  box-shadow: 0 8px 24px -12px rgba(20, 19, 17, .55);
+}
+.image-zoom:hover { background: rgba(255, 255, 255, .88); }
+.lightbox::backdrop {
+  background: rgba(23, 23, 20, .8);
+  -webkit-backdrop-filter: blur(14px) saturate(1.2); backdrop-filter: blur(14px) saturate(1.2);
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .image-zoom { background: rgba(243, 239, 230, .92); }
+  .lightbox::backdrop { background: #171714f0; }
+}
