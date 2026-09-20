@@ -218,12 +218,27 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
 .sources-note { max-width: 760px; margin-top: 24px; font-size: 13px; line-height: 1.6; }
 
 /* ---------- Адаптив ---------- */
+/* ---------- «Партнёрам»: те же плитки, «листы» и галерея, что на остальных страницах; ниже — только отличия ---------- */
+.cycle-grid .tile { min-height: 260px; }
+.cycle-grid .tile-desc, .people-grid .tile-desc { max-width: 340px; }
+.people-grid .tile { min-height: 280px; }
+.people-grid .tile-link .icon { width: 16px; height: 16px; }
+.metrics-wide { display: grid; grid-template-columns: repeat(2, minmax(0, max-content)); gap: 26px 44px; }
+.feature-copy .text-link + .text-link { margin-left: 28px; }
+.lab-list { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(6, auto); grid-auto-flow: column; column-gap: 56px; margin-top: 8px; }
+@media (max-width: 700px) { #labs-title { -webkit-hyphens: auto; hyphens: auto; overflow-wrap: break-word; } } /* «высокоэффективных» не помещается в строку на телефоне */
+.lab-links { display: flex; flex-wrap: wrap; gap: 14px 36px; margin-top: 40px; }
+.contact-card { display: flex; flex-direction: column; align-items: flex-start; gap: 28px; max-width: 760px; }
+.contact-card p { margin: 0; font-size: 17px; line-height: 1.65; color: #d4d0c6; }
+.contact-card .btn { max-width: 100%; min-height: 54px; height: auto; padding-block: 14px; white-space: normal; text-align: left; border-radius: 28px; }
+.contact-card .btn .icon { flex-shrink: 0; }
 @media (max-width: 1200px) {
   .explorer-layout { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); }
   .explorer-hint { display: none; }
   .expand-map { margin-left: auto; }
   .learning-grid { grid-template-columns: 1fr 1fr; }
   .learning-grid .tile:last-child { grid-column: 1 / -1; min-height: 240px; }
+  .cycle-grid .tile:last-child { grid-column: auto; min-height: 260px; }
 }
 @media (max-width: 900px) {
   .explorer-layout { grid-template-columns: 1fr; gap: 36px; }
@@ -237,6 +252,8 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
   .object-detail { padding: 24px; }
   .location-layout { grid-template-columns: 1fr; gap: 32px; }
   .learning-grid { grid-template-columns: 1fr; }
+  .lab-list { grid-template-columns: 1fr; grid-template-rows: none; grid-auto-flow: row; }
+  .metrics-wide { gap: 22px 32px; }
   .learning-grid .tile { min-height: 220px; }
   .feature-layout { grid-template-columns: 1fr; gap: 32px; }
   .flow-steps { grid-template-columns: 1fr; gap: 28px; }

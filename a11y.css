@@ -14,7 +14,7 @@
 .vi-toggle-text { min-height: auto; padding: 0; border: 0; border-radius: 0; font-size: 14px; text-decoration: underline; text-underline-offset: 4px; }
 .vi-toggle-text svg { display: none; }
 .vi-toggle-text:hover { background: none; }
-@media (max-width: 1200px) {
+@media (max-width: 1440px) {
   .header .vi-toggle { width: 36px; padding: 0; justify-content: center; }
   .header .vi-toggle span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 }
@@ -34,7 +34,7 @@ html.vi body, html.vi body *, html.vi body *::before, html.vi body *::after { an
 html.vi body, html.vi body * {
   background-color: var(--vi-bg) !important; color: var(--vi-fg) !important; background-image: none !important;
   box-shadow: none !important; text-shadow: none !important; border-color: var(--vi-fg) !important;
-  font-family: "Golos Text", Arial, sans-serif !important; font-weight: 400; letter-spacing: var(--vi-ls) !important; line-height: var(--vi-lh) !important;
+  font-family: "Golos Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans CJK SC", Arial, sans-serif !important; font-weight: 400; letter-spacing: var(--vi-ls) !important; line-height: var(--vi-lh) !important;
   opacity: 1 !important; transform: none !important; translate: none !important; scale: none !important; filter: none !important;
   mix-blend-mode: normal !important; -webkit-text-stroke: 0 !important; text-wrap: pretty; overflow-wrap: anywhere;
 }
@@ -116,6 +116,10 @@ html.vi .tile-image > img { position: static !important; width: 100% !important;
 html.vi .tile-cover, html.vi .card-cover { position: static !important; display: inline-block; text-decoration: underline; }
 html.vi .tile-cover::after { content: "Подробнее"; }
 html.vi .card-cover::after { content: "Открыть публикацию"; }
+html.vi[lang="en"] .tile-cover::after { content: "Read more"; }
+html.vi[lang="en"] .card-cover::after { content: "Open the publication"; }
+html.vi[lang^="zh"] .tile-cover::after { content: "了解详情"; }
+html.vi[lang^="zh"] .card-cover::after { content: "打开报道"; }
 html.vi .tour-visual { position: static !important; height: auto !important; }
 html.vi .tour-frame { height: auto !important; border-radius: 0 !important; }
 html.vi .tour-fig, html.vi .making-fig { position: static !important; visibility: visible !important; margin: 0 0 1rem !important; }
@@ -171,3 +175,8 @@ html.vi[data-vi-images="off"] .vi-alt { display: block; margin: .5rem 0; padding
 @media print {
   .vi-toggle, .vi-panel { display: none !important; }
 }
+/* Переключатель языка в режиме для слабовидящих: обычные подчёркнутые ссылки, текущий язык — в рамке. */
+html.vi .lang-switch { gap: .5rem; letter-spacing: 0; }
+html.vi .lang-switch a, html.vi .header nav .lang-switch a { padding: .15rem .45rem !important; border-radius: 4px; color: var(--vi-fg) !important; background: none !important; }
+html.vi .lang-switch a[aria-current], html.vi .header nav .lang-switch a[aria-current] { border: 2px solid var(--vi-fg); text-decoration: none !important; }
+

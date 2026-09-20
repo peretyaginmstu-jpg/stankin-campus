@@ -23,3 +23,36 @@
 .header{height:66px}.brand{align-items:center;gap:18px}.official-logo{width:151px;height:auto;flex-shrink:0}.brand-sub{font-size:15px}.footer-logo{width:225px;height:auto}.footer-title span{margin-top:22px}
 @media(max-width:900px){.header{height:64px}.official-logo{width:141px}.brand-sub{display:none}}
 @media(max-width:650px){.official-logo{width:135px}.brand-sub{display:block;font-size:11px}.brand{gap:14px}.footer-logo{width:198px}.footer-title span{margin-top:15px}}
+/* ---------- Переключатель языка (RU · EN · 中文): обычные ссылки на ту же страницу в другом языковом дереве ---------- */
+.lang-switch{display:inline-flex;align-items:center;gap:2px;font:500 12px/1 var(--sans);letter-spacing:.06em;white-space:nowrap}
+.lang-switch a,.header nav .lang-switch a{padding:7px 9px;border-radius:999px;color:#c4c0b8;text-decoration:none;transition:color .3s,background-color .3s}
+.lang-switch a:hover,.header nav .lang-switch a:hover{color:var(--paper);text-decoration:none}
+.lang-switch a[aria-current],.header nav .lang-switch a[aria-current]{color:var(--ink);background:var(--paper)}
+.header nav .lang-switch{margin-left:4px}
+.footer-bottom .lang-switch{margin:-7px 0}
+/* С пятью пунктами меню и переключателем языка шапка не помещается уже на планшетной ширине,
+   поэтому между 961 и 1100px шапка уплотняется, а меню-бургер включается с 960px (раньше — с 650px);
+   правила ниже повторяют мобильную шапку. */
+@media(max-width:1100px){.header{gap:16px}.header nav{gap:16px;font-size:13px}.brand-sub{display:none}.header nav .lang-switch{margin-left:0}}
+@media(max-width:960px){
+.header{gap:15px}.brand{margin-right:auto}.header nav{display:none}.menu-toggle{display:block}
+.menu-open .header nav{position:absolute;top:64px;left:0;right:0;background:var(--ink);padding:20px var(--gutter) 28px;display:flex;flex-direction:column;align-items:stretch;gap:0;border-top:1px solid #67635b}
+.menu-open .header nav a{font-family:var(--serif);font-size:25px;padding:15px 0}
+.menu-open .header nav{max-height:calc(100vh - 64px);max-height:calc(100dvh - 64px);overflow-y:auto}
+.menu-open .header nav .lang-switch{margin:16px 0 0;padding-top:20px;border-top:1px solid #67635b;gap:8px}
+.menu-open .header nav .lang-switch a{font:500 14px/1 var(--sans);padding:11px 16px;border:1px solid #67635b}
+.menu-open .header nav .lang-switch a[aria-current]{border-color:var(--paper)}
+.footer-bottom .lang-switch{margin:0 0 0 -9px}
+}
+/* ---------- Китайская версия: в Prata и Golos Text нет иероглифов — добавляем системные шрифты той же роли.
+   Латиница и цифры остаются в шрифтах сайта. Отрицательная разрядка рассчитана на кириллицу и латиницу,
+   иероглифам она вредит. ---------- */
+html[lang^="zh"]{--serif:'Prata','Songti SC','STSong','Noto Serif CJK SC','Source Han Serif SC','SimSun',serif;--sans:'Golos Text','PingFang SC','Hiragino Sans GB','Microsoft YaHei','Noto Sans CJK SC','Noto Sans SC',sans-serif}
+html[lang^="zh"] body{line-break:strict}
+html[lang^="zh"] :is(h1,h2,h3,.hero-title,.manifesto-text,.tile-num,.metrics dt,.hero-stats dt,.now-date,.now-next li span,.object-metrics strong,.object-card-name,.card h3,.p-title,.tl-item time,.tl-item h3,.sources tbody th,.pub-list span,.fold summary,.roadmap-date,.footer-title,.btn){letter-spacing:0}
+html[lang^="zh"] :is(.eyebrow,.tile-label,.story-tag,.side-index a,.scroll-cue,.ticker-track,.brand-sub){letter-spacing:.08em}
+html[lang^="zh"] :is(.eyebrow,.tile-label,.story-tag,.hero-caption,.scroll-cue,.card-index,.flow-index,.fold-index,.p-index,.p-sub){font-size:13px}
+/* Английская версия: длинные слова в узких колонках переносятся по слогам. */
+html[lang="en"] :is(p,li,dd,figcaption,.tile-desc,.section-note){-webkit-hyphens:auto;hyphens:auto}
+html[lang="en"] :is(.manifesto-text,.hero-lede,.tile-num,.contact-card p){-webkit-hyphens:manual;hyphens:manual}
+

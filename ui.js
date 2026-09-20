@@ -1,6 +1,7 @@
 /* Общий слой движения (16.09.2026), подключается на всех страницах.
    Без зависимостей. Всё отключается при prefers-reduced-motion,
    без JavaScript страницы остаются полностью читаемыми. */
+import {T, LANG, formatNumber, plural} from './i18n.js';
 const $ = (s, root = document) => root.querySelector(s);
 const $$ = (s, root = document) => [...root.querySelectorAll(s)];
 const root = document.documentElement;
@@ -9,7 +10,7 @@ const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 const lite = matchMedia('(max-width: 900px), (pointer: coarse)').matches;
 const still = () => reduced.matches || lite || root.classList.contains('vi');
 const clamp01 = (v) => Math.max(0, Math.min(1, v));
-const format = (n) => n.toLocaleString('ru-RU');
+const format = formatNumber;
 
 /* ---------- Появление блоков ---------- */
 const revealer = new IntersectionObserver((entries) => {
@@ -23,7 +24,8 @@ const counters = new IntersectionObserver((entries) => {
     if (!e.isIntersecting) return;
     counters.unobserve(e.target);
     const el = e.target, target = Number(el.dataset.count);
-    if (reduced.matches || !Number.isFinite(target)) { el.textContent = format(target); return; }
+    if (!Number.isFinite(target)) return; /* без числа в data-count оставляем текст из разметки */
+    if (reduced.matches) { el.textContent = format(target); return; }
     const start = performance.now(), duration = lite ? 1000 : 1500;
     const tick = (now) => {
       const p = clamp01((now - start) / duration), eased = 1 - Math.pow(1 - p, 4);
@@ -37,10 +39,14 @@ $$('[data-count]').forEach((el) => counters.observe(el));
 
 /* ---------- Манифест: слова подсвечиваются по мере прокрутки ---------- */
 const manifestos = $$('[data-words]').map((el) => {
-  const text = el.textContent.trim().split(/\s+/);
+  /* В китайском слова не разделены пробелами: делим текст сегментатором (или по знакам) и склеиваем без пробелов. */
+  const source = el.textContent.trim();
+  const hanzi = LANG === 'zh';
+  const text = !hanzi ? source.split(/\s+/)
+    : ('Segmenter' in Intl ? [...new Intl.Segmenter('zh', {granularity: 'word'}).segment(source)].map((s) => s.segment) : [...source]);
   el.replaceChildren(...text.flatMap((w, i) => {
     const span = document.createElement('span'); span.className = 'mw'; span.textContent = w;
-    return i ? [document.createTextNode(' '), span] : [span];
+    return i && !hanzi ? [document.createTextNode(' '), span] : [span];
   }));
   const words = $$('.mw', el);
   if (still()) words.forEach((w) => w.classList.add('lit'));
@@ -222,14 +228,13 @@ if (detail) {
 }
 
 /* ---------- Дни с начала строительства и отметка «сегодня» на дорожной карте ---------- */
-const plural = (n, forms) => { const m10 = n % 10, m100 = n % 100; return forms[(m10 === 1 && m100 !== 11) ? 0 : (m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) ? 1 : 2]; };
 const today = new Date(); today.setHours(0, 0, 0, 0);
 $$('[data-days-since]').forEach((el) => {
   const start = new Date(el.dataset.daysSince + 'T00:00:00');
   const days = Math.max(0, Math.round((today - start) / 86400000));
   el.textContent = format(days);
   const label = el.parentElement.querySelector('[data-days-label]');
-  if (label) label.textContent = plural(days, ['день с начала строительства', 'дня с начала строительства', 'дней с начала строительства']);
+  if (label) label.textContent = plural(days, T.days);
 });
 $$('[data-roadmap]').forEach((map) => {
   const start = new Date(map.dataset.start + 'T00:00:00'), end = new Date(map.dataset.end + 'T00:00:00');
