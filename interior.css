@@ -17,7 +17,10 @@ body:not([data-page=home]) main :is(p, li) { text-wrap: pretty; }
 
 /* ---------- Объекты: лента карточек, выбирающих объект ---------- */
 .object-strip { padding-top: 6px; }
-.object-card { flex: 0 0 clamp(230px, 22vw, 320px); display: block; padding: 0; border: 0; background: none; text-align: left; color: inherit; font: inherit; cursor: pointer; }
+/* Кнопка по умолчанию центрирует содержимое по вертикали, а карточки в ленте растянуты
+   по самой высокой: у карточки с коротким названием снимок съезжал вниз на половину
+   разницы (15 px при двухстрочном соседе). Колонка с прижимом к верху это снимает. */
+.object-card { flex: 0 0 clamp(230px, 22vw, 320px); display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; padding: 0; border: 0; background: none; text-align: left; color: inherit; font: inherit; cursor: pointer; }
 .object-card:disabled { cursor: default; }
 .object-card-media { display: block; position: relative; aspect-ratio: 3 / 2; border-radius: var(--radius); overflow: hidden; background: var(--paper-2); }
 .object-card-media img { width: 100%; height: 100%; object-fit: cover; transition: transform 1.2s var(--ease); }
