@@ -279,23 +279,34 @@ $$('[data-roadmap]').forEach((map) => {
 });
 
 /* ---------- Видеопролёт первого экрана главной (21.09.2026) ----------
-   Фотография остаётся основой страницы: ролик подставляется поверх неё только на широких
-   экранах с мышью, вне режима «меньше движения» и вне экономии трафика. Играет один раз и
-   замирает на последнем кадре — петля на пролёте дрона читалась бы стыком, а обратный ход
-   погнал бы машины задом наперёд. Путь к файлам считается от адреса самого модуля: на
-   GitHub Pages сайт лежит в подкаталоге, а protect.mjs правит базовый путь только в HTML и CSS. */
-const heroMedia = hero && document.body.dataset.page === 'home' && !still()
-  && matchMedia('(min-width: 1024px) and (pointer: fine)').matches ? $('.hero-media', hero) : null;
+   Фотография остаётся основой страницы: ролик подставляется поверх неё только там, где ему есть
+   место, — на широком экране с мышью горизонтальный пролёт, на телефоне и планшете в книжной
+   ориентации вертикальный (камера поднимается, а не летит вперёд: снизу экрана текст первого
+   экрана). Оба играют один раз и замирают на последнем кадре — петля на пролёте дрона читалась бы
+   стыком, а обратный ход погнал бы машины задом наперёд. Путь к файлам считается от адреса самого
+   модуля: на GitHub Pages сайт лежит в подкаталоге, а protect.mjs правит базовый путь только
+   в HTML и CSS. */
 const link = navigator.connection || {};
-if (heroMedia && !link.saveData && !/2g/.test(link.effectiveType || '')) {
+const thrifty = link.saveData === true || /2g/.test(link.effectiveType || '');
+const wide = matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
+/* На сотовой сети вертикальный ролик грузим только при уверенной связи; Safari поля не
+   заполняет — там effectiveType пустой, и это не повод отказываться. */
+const upright = matchMedia('(max-width: 900px) and (orientation: portrait)').matches
+  && (!link.effectiveType || link.effectiveType === '4g');
+/* На широком или плотном экране (ретина, большой монитор) браузер растянул бы кадр 1920
+   сам и мягче: там отдаём вариант 2560×1440. Порог — реальные пиксели, а не CSS. */
+const dense = wide && innerWidth * (devicePixelRatio || 1) >= 2200;
+const clip = wide ? (dense ? 'hero-flight-2560' : 'hero-flight') : (upright ? 'hero-flight-portrait' : null);
+const heroMedia = hero && document.body.dataset.page === 'home' && clip
+  && !reduced.matches && !root.classList.contains('vi') && !thrifty ? $('.hero-media', hero) : null;
+if (heroMedia) {
   const base = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
   const video = document.createElement('video');
   Object.assign(video, {muted: true, defaultMuted: true, playsInline: true, preload: 'auto', tabIndex: -1, disablePictureInPicture: true});
   video.setAttribute('aria-hidden', 'true');
-  for (const [name, type] of [['hero-flight.webm', 'video/webm; codecs="av01.0.05M.08"'], ['hero-flight.mp4', 'video/mp4; codecs="avc1.640028"']]) {
-    const source = document.createElement('source');
-    source.src = `${base}/assets/${name}`; source.type = type; video.append(source);
-  }
+  /* Один файл на ориентацию: после лёгкого повышения резкости AV1 выходил тяжелее H.264
+     и при этом мягче, поэтому webm-варианта нет. */
+  video.src = `${base}/assets/${clip}.mp4`;
   /* Наезд фотографии снимаем сразу, до загрузки: иначе ролик вступит в середине наезда
      и масштаб прыгнет. Если источник не открылся, класс возвращается и наезд начинается. */
   heroMedia.classList.add('has-video');

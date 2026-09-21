@@ -425,7 +425,7 @@ html.js .tl-item.in > div { opacity: 1; transform: none; }
 @media (max-width: 650px) {
   .hero-title { font-size: clamp(50px, 15vw, 84px); max-width: none; }
   .hero-page .hero-title { font-size: clamp(42px, 12.5vw, 72px); }
-  .hero-media img { object-position: 46% 50%; }
+  .hero-media img, .hero-media video { object-position: 46% 50%; }
   .hero-actions { width: 100%; }
   .hero-actions .btn { flex: 1 1 auto; justify-content: space-between; }
   .scroll-cue { display: none; }
