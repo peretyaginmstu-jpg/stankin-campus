@@ -280,45 +280,158 @@ $$('[data-roadmap]').forEach((map) => {
 
 /* ---------- Видеопролёт первого экрана главной (21.09.2026) ----------
    Фотография остаётся основой страницы: ролик подставляется поверх неё только там, где ему есть
-   место, — на широком экране с мышью горизонтальный пролёт, на телефоне и планшете в книжной
-   ориентации вертикальный (камера поднимается, а не летит вперёд: снизу экрана текст первого
-   экрана). Оба играют один раз и замирают на последнем кадре — петля на пролёте дрона читалась бы
-   стыком, а обратный ход погнал бы машины задом наперёд. Путь к файлам считается от адреса самого
-   модуля: на GitHub Pages сайт лежит в подкаталоге, а protect.mjs правит базовый путь только
-   в HTML и CSS. */
+   место и где канал его вытянет. Проверено на iPhone в симуляторе: Safari не начинает
+   воспроизведение, если битрейт файла выше скорости сети, — на слабом сигнале ролик просто
+   никогда не стартует и человек видит фотографию, ничего не понимая. Поэтому скорость сначала
+   измеряется, файл выбирается по ней, а если выбранный всё-таки не пошёл — берётся тот, что легче.
+   Ролики играют один раз и замирают на последнем кадре; петля читалась бы стыком, а обратный
+   ход погнал бы машины задом наперёд. Путь считается от адреса модуля: на GitHub Pages сайт лежит
+   в подкаталоге, а protect.mjs правит базовый путь только в HTML и CSS.
+   Диагностика на живом устройстве: открыть главную с ?videodebug — снизу появится строка решений. */
+const vdebug = /[?&]videodebug(?:[=&]|$)/.test(location.search);
+const vlog = (message) => {
+  if (!vdebug) return;
+  let box = document.getElementById('video-debug');
+  if (!box) {
+    box = document.createElement('p');
+    box.id = 'video-debug';
+    box.style.cssText = 'position:fixed;left:8px;right:8px;bottom:8px;z-index:99;margin:0;padding:8px 10px;border-radius:10px;background:rgba(20,19,17,.92);color:#f3efe6;font:12px/1.45 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap';
+    document.body.append(box);
+  }
+  box.textContent += (box.textContent ? '\n' : '') + message;
+};
+
 const link = navigator.connection || {};
-const thrifty = link.saveData === true || /2g/.test(link.effectiveType || '');
+const thrifty = link.saveData === true || /(^|-)2g$/.test(link.effectiveType || '');
 const wide = matchMedia('(min-width: 1024px) and (pointer: fine)').matches;
-/* На сотовой сети вертикальный ролик грузим только при уверенной связи; Safari поля не
-   заполняет — там effectiveType пустой, и это не повод отказываться. */
-const upright = matchMedia('(max-width: 900px) and (orientation: portrait)').matches
-  && (!link.effectiveType || link.effectiveType === '4g');
-/* На широком или плотном экране (ретина, большой монитор) браузер растянул бы кадр 1920
-   сам и мягче: там отдаём вариант 2560×1440. Порог — реальные пиксели, а не CSS. */
+const upright = matchMedia('(max-width: 900px) and (orientation: portrait)').matches;
 const dense = wide && innerWidth * (devicePixelRatio || 1) >= 2200;
-const clip = wide ? (dense ? 'hero-flight-2560' : 'hero-flight') : (upright ? 'hero-flight-portrait' : null);
-const heroMedia = hero && document.body.dataset.page === 'home' && clip
+/* Порог — скорость в байтах в секунду, при которой файл проигрывается без дозагрузки:
+   его битрейт плюс полуторный запас. Битрейты: 2560 — 11,5 Мбит/с, 1920 — 6,8, лёгкий 1920 — 2,1,
+   вертикальный — 5,9, лёгкий вертикальный — 1,3 Мбит/с. */
+const TIERS = wide
+  ? [{name: 'hero-flight-2560', need: 2300000, when: dense},
+     {name: 'hero-flight', need: 1400000, when: true},
+     {name: 'hero-flight-light', need: 420000, when: true}]
+  : [{name: 'hero-flight-portrait', need: 1200000, when: true},
+     {name: 'hero-flight-portrait-light', need: 260000, when: true}];
+const tiers = TIERS.filter((t) => t.when);
+const heroMedia = hero && document.body.dataset.page === 'home' && (wide || upright)
   && !reduced.matches && !root.classList.contains('vi') && !thrifty ? $('.hero-media', hero) : null;
-if (heroMedia) {
+
+if (!heroMedia) {
+  vlog(`ролик не подключается: ${!hero || document.body.dataset.page !== 'home' ? 'не главная'
+    : !(wide || upright) ? 'узкий экран в альбомной ориентации или сенсорный планшет в альбоме'
+    : reduced.matches ? 'включено «меньше движения»'
+    : root.classList.contains('vi') ? 'версия для слабовидящих' : 'экономия трафика'}`);
+} else {
   const base = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
-  const video = document.createElement('video');
-  Object.assign(video, {muted: true, defaultMuted: true, playsInline: true, preload: 'auto', tabIndex: -1, disablePictureInPicture: true});
-  video.setAttribute('aria-hidden', 'true');
-  /* Один файл на ориентацию: после лёгкого повышения резкости AV1 выходил тяжелее H.264
-     и при этом мягче, поэтому webm-варианта нет. */
-  video.src = `${base}/assets/${clip}.mp4`;
-  /* Наезд фотографии снимаем сразу, до загрузки: иначе ролик вступит в середине наезда
-     и масштаб прыгнет. Если источник не открылся, класс возвращается и наезд начинается. */
-  heroMedia.classList.add('has-video');
-  video.addEventListener('error', () => { video.remove(); heroMedia.classList.remove('has-video'); });
-  video.addEventListener('playing', () => video.classList.add('is-on'), {once: true});
-  video.addEventListener('canplay', () => video.play().catch(() => video.remove()), {once: true});
-  heroMedia.append(video);
-  /* Медленная сеть: через 8 с молча остаёмся на фотографии и обрываем закачку. */
-  setTimeout(() => { if (!video.classList.contains('is-on')) video.remove(); }, 8000);
-  /* За пределами первого экрана считать кадры незачем. */
-  new IntersectionObserver(([e]) => {
-    if (video.ended || !video.isConnected) return;
-    if (e.isIntersecting) video.play().catch(() => {}); else video.pause();
-  }, {threshold: .02}).observe(hero);
+  const image = $('img', heroMedia);
+
+  /* Скорость: сначала по тому, что страница уже скачала (фотография первого экрана — 0,5 МБ),
+     и только если таких замеров нет — коротким пробным запросом к самому лёгкому файлу. */
+  const fromTiming = () => {
+    let best = 0;
+    for (const e of performance.getEntriesByType('resource')) {
+      /* На телефон едет вариант фотографии на 900 px (~0,12 МБ) — планка ниже, иначе замера не будет. */
+      if (e.transferSize > 60000 && e.duration > 20) best = Math.max(best, e.transferSize / (e.duration / 1000));
+    }
+    return best;
+  };
+  const byProbe = async () => {
+    const t0 = performance.now();
+    try {
+      const r = await fetch(`${base}/assets/${tiers[tiers.length - 1].name}.mp4`, {headers: {Range: 'bytes=0-196607'}, cache: 'no-store'});
+      const bytes = (await r.arrayBuffer()).byteLength;
+      return bytes / ((performance.now() - t0) / 1000);
+    } catch { return 0; }
+  };
+
+  /* Наезд фотографии гасим не сбросом, а фиксацией текущего масштаба: анимация к этому моменту
+     уже идёт, и простое снятие отбросило бы кадр обратно. */
+  const freezeZoom = () => {
+    const now = getComputedStyle(image).transform;
+    if (now && now !== 'none') image.style.transform = now;
+    heroMedia.classList.add('has-video');
+  };
+
+  const attach = (index) => {
+    const tier = tiers[index];
+    const video = document.createElement('video');
+    /* Атрибутами, а не только свойствами: Safari принимает решение об автовоспроизведении
+       по разметке элемента в момент загрузки источника. */
+    video.setAttribute('muted', '');
+    video.setAttribute('playsinline', '');
+    video.setAttribute('autoplay', '');
+    video.setAttribute('preload', 'auto');
+    video.setAttribute('aria-hidden', 'true');
+    video.setAttribute('tabindex', '-1');
+    video.muted = true; video.defaultMuted = true; video.playsInline = true; video.disablePictureInPicture = true;
+    video.src = `${base}/assets/${tier.name}.mp4`;
+    heroMedia.append(video);
+    vlog(`беру ${tier.name}.mp4`);
+
+    const off = new AbortController();
+    /* Открепившийся элемент продолжает получать события и, если его не заглушить, качает файл
+       в пустоту: kill() снимает слушатели и обрывает закачку. */
+    const kill = () => {
+      off.abort();
+      try { video.pause(); video.removeAttribute('src'); video.load(); } catch {}
+      video.remove();
+    };
+    const start = () => {
+      if (!video.isConnected) return;
+      const p = video.play();
+      if (p && p.catch) p.catch((e) => vlog(`play(): ${e.name}`));
+    };
+    for (const e of ['loadedmetadata', 'loadeddata', 'canplay', 'canplaythrough']) video.addEventListener(e, start, {signal: off.signal});
+    /* Если автозапуск запрещён (энергосбережение, настройка Safari «никогда»), ролик стартует
+       от первого касания, клика или возврата на вкладку. */
+    const wake = () => { if (video.paused && !video.ended) start(); };
+    for (const e of ['touchstart', 'click', 'pageshow', 'visibilitychange']) addEventListener(e, wake, {passive: true, signal: off.signal});
+    const shown = () => {
+      if (video.classList.contains('is-on')) return;
+      clearTimeout(guard);
+      freezeZoom();
+      video.classList.add('is-on');
+      vlog(`пошёл: ${tier.name}.mp4`);
+    };
+    video.addEventListener('playing', shown, {signal: off.signal});
+    video.addEventListener('timeupdate', () => { if (video.currentTime > 0.1) shown(); }, {signal: off.signal});
+    video.addEventListener('error', () => {
+      vlog(`ошибка источника ${tier.name}.mp4`);
+      clearTimeout(guard); kill(); next(index);
+    }, {signal: off.signal});
+    start();
+
+    /* Не стартовал за 12 с — канал слабее, чем показал замер: берём файл легче, а если легче
+       некуда, молча остаёмся на фотографии и обрываем закачку. */
+    const guard = setTimeout(() => {
+      if (video.classList.contains('is-on')) return;
+      vlog(`${tier.name}.mp4 не стартовал за 12 с (ready=${video.readyState})`);
+      kill(); next(index);
+    }, 12000);
+
+    /* За пределами первого экрана считать кадры незачем. */
+    new IntersectionObserver(([e]) => {
+      if (video.ended || !video.isConnected) return;
+      if (e.isIntersecting) start(); else if (!video.paused) video.pause();
+    }, {threshold: .02}).observe(hero);
+  };
+
+  const next = (index) => {
+    if (index + 1 < tiers.length) attach(index + 1);
+    else { heroMedia.classList.remove('has-video'); image.style.transform = ''; vlog('остаёмся на фотографии'); }
+  };
+
+  (async () => {
+    /* Мелкий файл на медленном старте TCP занижает оценку, поэтому если замера не хватает
+       на самый тяжёлый уместный файл — перепроверяем пробным чтением 192 КБ. */
+    let speed = fromTiming();
+    if (speed < tiers[0].need) speed = Math.max(speed, await byProbe());
+    vlog(`сеть ≈ ${(speed / 1048576).toFixed(2)} МБ/с (${(speed * 8 / 1e6).toFixed(1)} Мбит/с)`);
+    const index = tiers.findIndex((t) => speed >= t.need);
+    if (index < 0) { vlog('канал не вытянет даже лёгкий файл — остаёмся на фотографии'); return; }
+    attach(index);
+  })();
 }
