@@ -117,6 +117,14 @@ html.js .reveal.in { opacity: 1; transform: none; }
 .hero-media { position: absolute; inset: -1px 0 0; z-index: -2; transform: translate3d(0, calc(var(--sy) * .28px), 0); will-change: transform; }
 .hero-media img { width: 100%; height: 100%; object-fit: cover; object-position: 52% 46%; animation: hero-zoom 9s var(--ease) both; }
 @keyframes hero-zoom { from { transform: scale(1.14); } to { transform: scale(1); } }
+/* Видеопролёт первого экрана главной (21.09.2026). Ролик подставляется поверх фотографии
+   только там, где это уместно, — решение принимает ui.js. Первый кадр ролика совпадает
+   с фотографией по кадрировке, поэтому подмена читается как оживший снимок, а не как рывок;
+   наезд самой фотографии на это время выключается — два движения спорили бы друг с другом. */
+.hero-media video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 52% 46%; opacity: 0; transition: opacity .8s var(--ease); }
+.hero-media video.is-on { opacity: 1; }
+.hero-media.has-video img { animation: none; }
+html.vi .hero-media video { display: none; }
 .hero-scrim {
   position: absolute; inset: 0; z-index: -1;
   /* Середина градиента была почти прозрачной, а там стоят хлебные крошки и надглавие.
@@ -474,10 +482,11 @@ html.js .tl-item.in > div { opacity: 1; transform: none; }
   .manifesto-text .mw { color: var(--ink); }
   .sheet .manifesto-text .mw { color: var(--paper); }
   .tile, .tile-image > img, .card-media img, .making-fig img, .tour-fig img, .btn, .process-item button, .p-body, .fold::details-content { transition: none !important; }
+  .hero-media video { display: none; }
 }
 
 @media print {
-  .scroll-progress, .gallery-nav, .scroll-cue, .hero-scrim { display: none; }
+  .scroll-progress, .gallery-nav, .scroll-cue, .hero-scrim, .hero-media video { display: none; }
   .hero { min-height: auto; color: black; background: white; }
   .hero-media { display: none; }
   .finale, .sheet, .making, .tile-dark { background: white; color: black; }

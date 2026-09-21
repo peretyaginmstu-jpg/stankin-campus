@@ -277,3 +277,37 @@ $$('[data-roadmap]').forEach((map) => {
   map.style.setProperty('--today', p.toFixed(4));
   if (marker) { marker.style.setProperty('--p', p.toFixed(4)); marker.hidden = false; }
 });
+
+/* ---------- Видеопролёт первого экрана главной (21.09.2026) ----------
+   Фотография остаётся основой страницы: ролик подставляется поверх неё только на широких
+   экранах с мышью, вне режима «меньше движения» и вне экономии трафика. Играет один раз и
+   замирает на последнем кадре — петля на пролёте дрона читалась бы стыком, а обратный ход
+   погнал бы машины задом наперёд. Путь к файлам считается от адреса самого модуля: на
+   GitHub Pages сайт лежит в подкаталоге, а protect.mjs правит базовый путь только в HTML и CSS. */
+const heroMedia = hero && document.body.dataset.page === 'home' && !still()
+  && matchMedia('(min-width: 1024px) and (pointer: fine)').matches ? $('.hero-media', hero) : null;
+const link = navigator.connection || {};
+if (heroMedia && !link.saveData && !/2g/.test(link.effectiveType || '')) {
+  const base = new URL('.', import.meta.url).pathname.replace(/\/$/, '');
+  const video = document.createElement('video');
+  Object.assign(video, {muted: true, defaultMuted: true, playsInline: true, preload: 'auto', tabIndex: -1, disablePictureInPicture: true});
+  video.setAttribute('aria-hidden', 'true');
+  for (const [name, type] of [['hero-flight.webm', 'video/webm; codecs="av01.0.05M.08"'], ['hero-flight.mp4', 'video/mp4; codecs="avc1.640028"']]) {
+    const source = document.createElement('source');
+    source.src = `${base}/assets/${name}`; source.type = type; video.append(source);
+  }
+  /* Наезд фотографии снимаем сразу, до загрузки: иначе ролик вступит в середине наезда
+     и масштаб прыгнет. Если источник не открылся, класс возвращается и наезд начинается. */
+  heroMedia.classList.add('has-video');
+  video.addEventListener('error', () => { video.remove(); heroMedia.classList.remove('has-video'); });
+  video.addEventListener('playing', () => video.classList.add('is-on'), {once: true});
+  video.addEventListener('canplay', () => video.play().catch(() => video.remove()), {once: true});
+  heroMedia.append(video);
+  /* Медленная сеть: через 8 с молча остаёмся на фотографии и обрываем закачку. */
+  setTimeout(() => { if (!video.classList.contains('is-on')) video.remove(); }, 8000);
+  /* За пределами первого экрана считать кадры незачем. */
+  new IntersectionObserver(([e]) => {
+    if (video.ended || !video.isConnected) return;
+    if (e.isIntersecting) video.play().catch(() => {}); else video.pause();
+  }, {threshold: .02}).observe(hero);
+}
