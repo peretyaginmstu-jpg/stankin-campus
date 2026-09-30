@@ -36,7 +36,19 @@ body[data-page="home"] .hero .hero-content { padding-bottom: calc(32px + var(--t
 .ticker-track { display: flex; width: max-content; animation: marquee 52s linear infinite; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; white-space: nowrap; color: var(--paper); }
 .ticker-track span { display: inline-flex; align-items: center; gap: 40px; padding-right: 40px; }
 .ticker-track span::after { content: ""; width: 6px; height: 6px; flex-shrink: 0; background: var(--accent-light); transform: rotate(45deg); }
-.ticker:hover .ticker-track { animation-play-state: paused; }
+.ticker:hover .ticker-track, .ticker.is-paused .ticker-track { animation-play-state: paused; }
+/* Явное «продолжить» кнопкой сильнее наведения: иначе нажатие мышью на кнопку, стоящую внутри строки, ничего бы не запускало. */
+.ticker.is-running .ticker-track { animation-play-state: running; }
+/* Кнопка паузы (создаётся в ui.js). Справа поверх строки: подложка глушит бегущий под ней текст. */
+.ticker-toggle {
+  position: absolute; right: 8px; top: 50%; z-index: 1; transform: translateY(-50%);
+  display: grid; place-items: center; width: 32px; height: 32px; padding: 0;
+  border-radius: 50%; border: 1px solid rgba(243, 239, 230, .4);
+  background: rgba(37, 36, 32, .86); color: var(--paper);
+}
+.ticker-toggle:hover { background: rgba(37, 36, 32, .96); border-color: rgba(243, 239, 230, .75); }
+.ticker-toggle:focus-visible { outline-offset: 2px; }
+.ticker-toggle svg { width: 14px; height: 14px; fill: currentColor; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
 @keyframes marquee { to { transform: translateX(-50%); } }
 
 /* ---------- Bento: кампус в цифрах ---------- */
@@ -91,6 +103,7 @@ body[data-page="home"] .hero .hero-content { padding-bottom: calc(32px + var(--t
 }
 @media (prefers-reduced-motion: reduce) {
   .ticker-track { animation: none; }
+  .ticker-toggle { display: none; }
 }
 @media print {
   .ticker { display: none; }

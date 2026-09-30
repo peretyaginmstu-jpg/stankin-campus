@@ -185,7 +185,7 @@ $$('.gallery-track').forEach((track) => {
   track.addEventListener('pointermove', (e) => {
     if (!dragging) return;
     const dx = e.clientX - startX;
-    if (!moved && Math.abs(dx) > 4) { moved = true; track.classList.add('is-dragging'); try { track.setPointerCapture(e.pointerId); } catch (_) {} }
+    if (!moved && Math.abs(dx) > 4) { moved = true; track.classList.add('is-dragging'); try { track.setPointerCapture(e.pointerId); } catch { /* указатель уже отпущен */ } }
     if (moved) track.scrollLeft = startLeft - dx;
   });
   /* Нативное перетаскивание картинок и ссылок отменяло прокрутку галереи мышью. */
@@ -276,6 +276,37 @@ $$('[data-roadmap]').forEach((map) => {
   const marker = $('.roadmap-today', map);
   map.style.setProperty('--today', p.toFixed(4));
   if (marker) { marker.style.setProperty('--p', p.toFixed(4)); marker.hidden = false; }
+});
+
+/* ---------- Бегущая строка: кнопка паузы ----------
+   Движение дольше пяти секунд человек должен уметь остановить сам (WCAG 2.2.2), а не только
+   наведением мыши. Кнопку создаём здесь, потому что разметка страницы зашифрована в сборке.
+   is-paused — остановлено кнопкой; is-running — продолжено кнопкой, и наведение мыши больше не тормозит строку. */
+const TICKER_ICONS = {
+  pause: '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="14" y="4" width="4" height="16" rx="1"/><rect x="6" y="4" width="4" height="16" rx="1"/></svg>',
+  play: '<svg viewBox="0 0 24 24" aria-hidden="true"><polygon points="6 3 20 12 6 21 6 3"/></svg>',
+};
+$$('.ticker').forEach((ticker) => {
+  const track = $('.ticker-track', ticker);
+  if (!track) return;
+  /* Фокусируемая кнопка внутри aria-hidden недоступна для вспомогательных технологий: скрываем от них только
+     сам текст строки, а не всю капсулу. */
+  if (ticker.getAttribute('aria-hidden') === 'true') { ticker.removeAttribute('aria-hidden'); track.setAttribute('aria-hidden', 'true'); }
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'ticker-toggle';
+  const show = (paused) => {
+    button.setAttribute('aria-label', paused ? T.tickerPlay : T.tickerPause);
+    button.innerHTML = paused ? TICKER_ICONS.play : TICKER_ICONS.pause;
+  };
+  button.addEventListener('click', () => {
+    const paused = !ticker.classList.contains('is-paused');
+    ticker.classList.toggle('is-paused', paused);
+    ticker.classList.toggle('is-running', !paused);
+    show(paused);
+  });
+  show(false);
+  ticker.append(button);
 });
 
 /* ---------- Видеопролёт первого экрана главной (21.09.2026) ----------
@@ -376,7 +407,7 @@ if (!heroMedia) {
        в пустоту: kill() снимает слушатели и обрывает закачку. */
     const kill = () => {
       off.abort();
-      try { video.pause(); video.removeAttribute('src'); video.load(); } catch {}
+      try { video.pause(); video.removeAttribute('src'); video.load(); } catch { /* элемент уже разобран */ }
       video.remove();
     };
     const start = () => {
