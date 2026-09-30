@@ -410,8 +410,11 @@ if (!heroMedia) {
       try { video.pause(); video.removeAttribute('src'); video.load(); } catch { /* элемент уже разобран */ }
       video.remove();
     };
+    /* Виден ли первый экран. Ролик, поставленный на паузу за его пределами, не должен оживать от
+       первого же касания или от конца загрузки — иначе кадры считаются впустую. */
+    let inView = true;
     const start = () => {
-      if (!video.isConnected) return;
+      if (!video.isConnected || !inView) return;
       const p = video.play();
       if (p && p.catch) p.catch((e) => vlog(`play(): ${e.name}`));
     };
@@ -444,9 +447,10 @@ if (!heroMedia) {
     }, 12000);
 
     /* За пределами первого экрана считать кадры незачем. */
-    new IntersectionObserver(([e]) => {
+    new IntersectionObserver((entries) => {
+      inView = entries[entries.length - 1].isIntersecting; /* последнее наблюдение — самое свежее */
       if (video.ended || !video.isConnected) return;
-      if (e.isIntersecting) start(); else if (!video.paused) video.pause();
+      if (inView) start(); else if (!video.paused) video.pause();
     }, {threshold: .02}).observe(hero);
   };
 
