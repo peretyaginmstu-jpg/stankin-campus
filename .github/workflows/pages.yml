@@ -1,0 +1,60 @@
+name: Pages
+
+# Публикация сайта на GitHub Pages из main. Работает, когда в Settings → Pages → Source выбрано
+# «GitHub Actions». Если там «Deploy from a branch», сайт публикует встроенная сборка Pages,
+# а этот workflow только прогоняет проверки и пропускает деплой.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      source: ${{ steps.source.outputs.type }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Проверки сборки
+        run: node tools/check.mjs
+      - name: Режим публикации Pages
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          type=$(gh api "repos/$REPO/pages" --jq .build_type 2>/dev/null) || type=none
+          case "$type" in workflow|legacy) ;; *) type=none ;; esac
+          echo "type=$type" >> "$GITHUB_OUTPUT"
+          if [ "$type" != workflow ]; then
+            echo "::notice::Pages в режиме «$type», а не «GitHub Actions»: деплой из этого workflow пропускается."
+          fi
+
+  deploy:
+    needs: check
+    if: needs.check.outputs.source == 'workflow'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Публикация
+        id: deployment
+        uses: actions/deploy-pages@v4
