@@ -32,10 +32,11 @@ $$('figure:not([data-no-zoom]) > img').forEach(img=>{const b=document.createElem
 /* ---------- Каталог объектов ---------- */
 /* У каждой языковой версии свой файл данных: campus-data.json, campus-data.en.json, campus-data.zh.json. */
 const DATA_FILE='/campus-data'+(LANG==='ru'?'':'.'+LANG);
-const loadData=()=>fetch(BASE+DATA_FILE+'.enc.json').then(r=>{if(!r.ok)throw Error('data');return r.json();}).then(gateDecrypt).then(t=>JSON.parse(t));
+/* no-cache: браузер перепроверяет файл на сервере (ETag → 304), а не берёт устаревшую копию после новой публикации. */
+const loadData=()=>fetch(BASE+DATA_FILE+'.enc.json',{cache:'no-cache'}).then(r=>{if(!r.ok)throw Error('data');return r.json();}).then(gateDecrypt).then(t=>JSON.parse(t));
 if($('.explorer')){
  let objects=[];let active=new URLSearchParams(location.search).get('object')||'academic';let view=new URLSearchParams(location.search).get('view')==='plan'?'plan':'aerial';
- const updateURL=()=>{const url=new URL(location.href);url.searchParams.set('object',active);if(view==='plan')url.searchParams.set('view','plan');else url.searchParams.delete('view');history.pushState(null,'',url);};
+ const updateURL=()=>{const url=new URL(location.href);url.searchParams.set('object',active);if(view==='plan')url.searchParams.set('view','plan');else url.searchParams.delete('view');if(url.href!==location.href)history.pushState(null,'',url);};
  function selectObject(id,push=false){
   if(!objects.length){if(id)active=id;if(push)updateURL();return;}
   const o=objects.find(v=>v.id===id)||objects[0];active=o.id;
@@ -44,7 +45,12 @@ if($('.explorer')){
   $('#mobile-object-name').textContent=o.name;
   const img=$('#object-image');img.srcset=asset(o.image+'-900.webp')+' 900w, '+asset(o.image+'.webp')+' '+o.imageWidth+'w';img.sizes='(max-width: 900px) 92vw, 32vw';img.src=asset(o.image+'.webp');img.alt=T.objectAlt+o.name;
   $('#object-features').replaceChildren(...o.features.map(f=>{const li=document.createElement('li');li.textContent=f;return li;}));
-  $('#object-link').href=BASE+o.link;$('#object-source').href=o.source;
+  $('#object-link').href=BASE+o.link;
+  /* Ссылка на источник приходит из данных: подставляем только http(s) (в том числе относительные адреса),
+     чтобы не пропустить javascript:, data: и подобное. Разбор через URL, а не регулярка: браузер сам решает, что за протокол. */
+  const source=$('#object-source');let safe=false;
+  if(typeof o.source==='string'&&o.source.trim())try{safe=/^https?:$/.test(new URL(o.source,location.href).protocol);}catch{/* не адрес — оставляем без ссылки */}
+  if(safe)source.href=o.source;else source.removeAttribute('href');
   $$('[data-object]').forEach(b=>{const selected=b.dataset.object===active;b.classList.toggle('selected',selected);b.setAttribute('aria-pressed',String(selected));});
   if(push)updateURL();
  }
@@ -60,9 +66,11 @@ if($('.explorer')){
  function restore(){const p=new URLSearchParams(location.search);selectObject(p.get('object'));selectView(p.get('view'));}
  $$('[data-object]').forEach(b=>b.addEventListener('click',()=>selectObject(b.dataset.object,true)));
  $$('[data-view]').forEach(b=>b.addEventListener('click',()=>selectView(b.dataset.view,true)));
- $('.expand-map').addEventListener('click',()=>showImage($('#map-image').src,$('#map-image').alt,$('.map-caption').textContent));
+ $('.expand-map')?.addEventListener('click',()=>showImage($('#map-image').src,$('#map-image').alt,$('.map-caption').textContent));
  window.addEventListener('popstate',restore);
- loadData().then(data=>{objects=data;restore();$$('[data-object]').forEach(b=>b.disabled=false);}).catch(()=>{$('.explorer-hint').textContent=T.loadError;$$('[data-object]').forEach(b=>b.disabled=true);});
+ /* Ошибка загрузки/расшифровки и ошибка отрисовки — разные вещи: во втором случае «Не удалось загрузить» было бы ложью. */
+ const showLoadError=err=>{console.error(err);const hint=$('.explorer-hint');if(hint)hint.textContent=T.loadError;$$('[data-object]').forEach(b=>b.disabled=true);};
+ loadData().then(data=>{objects=data;$$('[data-object]').forEach(b=>b.disabled=false);try{restore();}catch(err){console.error(err);}},showLoadError);
 }
 
 /* ---------- Фильтры хроники ---------- */
@@ -70,7 +78,7 @@ $$('[data-filter]').forEach(button=>button.addEventListener('click',()=>{
  const filter=button.dataset.filter;let shown=0;
  $$('.tl-item[data-kind], .timeline-item[data-kind]').forEach(item=>{item.hidden=filter!=='all'&&item.dataset.kind!==filter;if(!item.hidden)shown++;});
  $$('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
- $('.filter-status').textContent=(filter==='all'?T.filterAll:filter==='plan'?T.filterPlan:T.filterEvent)+shown;
+ const status=$('.filter-status');if(status)status.textContent=(filter==='all'?T.filterAll:filter==='plan'?T.filterPlan:T.filterEvent)+shown;
 }));
 
 /* ---------- Шапка: липкая, прячется при прокрутке вниз и возвращается при прокрутке вверх ---------- */
