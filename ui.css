@@ -53,7 +53,7 @@ h2 { font-family: var(--serif); font-weight: 400; }
 }
 .side-index a {
   display: flex; align-items: center; justify-content: flex-end; gap: 6px; min-height: 16px;
-  font-size: 9px; letter-spacing: .12em; text-transform: uppercase; opacity: .55; transition: opacity .3s;
+  font-size: 11px; letter-spacing: .12em; text-transform: uppercase; opacity: .75; transition: opacity .3s;
 }
 .side-index a { position: relative; }
 .side-index a em { position: absolute; right: calc(100% + 8px); top: 50%; white-space: nowrap; font-style: normal; opacity: 0; transform: translate(6px, -50%); transition: opacity .3s, transform .4s var(--ease); pointer-events: none; }
@@ -523,4 +523,14 @@ html.js .tl-item.in > div { opacity: 1; transform: none; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .image-zoom { background: rgba(243, 239, 230, .92); }
   .lightbox::backdrop { background: #171714f0; }
+}
+/* Кнопка увеличения проявляется по наведению, а на экранах без наведения (планшеты, телефоны) его нет:
+   там она должна быть видна всегда. Селектор с figure — чтобы не зависеть от порядка подключения styles.css. */
+@media (hover: none) {
+  figure .image-zoom { opacity: 1; }
+}
+/* Рамка фокуса на тёмных поверхностях. Акцентный #b4432d на #252420 даёт около 2,8:1 — меньше 3:1,
+   которые нужны для рамки фокуса; светлый акцент даёт около 6:1. */
+:is(.header, .footer, .lightbox, .tile-dark, .finale, .tour-frame, .ticker) :is(a, button, summary, [tabindex]):focus-visible {
+  outline-color: var(--accent-light);
 }

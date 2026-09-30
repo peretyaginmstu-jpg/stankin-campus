@@ -4,6 +4,7 @@
 export const STRINGS = {
   ru: {
     menuOpen: 'Открыть меню', menuClose: 'Закрыть меню',
+    tickerPause: 'Остановить бегущую строку', tickerPlay: 'Продолжить бегущую строку',
     zoom: 'Увеличить: ', objectAlt: 'Архитектурная визуализация: ',
     mapAltPlan: 'Схема размещения объектов с номерами и экспликацией из материалов проекта',
     mapAltAerial: 'Архитектурная визуализация кампуса с обозначениями объектов',
@@ -22,6 +23,7 @@ export const STRINGS = {
   },
   en: {
     menuOpen: 'Open menu', menuClose: 'Close menu',
+    tickerPause: 'Pause the ticker', tickerPlay: 'Resume the ticker',
     zoom: 'Enlarge: ', objectAlt: 'Architectural rendering: ',
     mapAltPlan: 'Site layout scheme with object numbers and the legend from the project materials (labels in Russian)',
     mapAltAerial: 'Architectural rendering of the campus with object markers',
@@ -40,6 +42,7 @@ export const STRINGS = {
   },
   zh: {
     menuOpen: '打开菜单', menuClose: '关闭菜单',
+    tickerPause: '暂停滚动信息', tickerPlay: '继续滚动信息',
     zoom: '放大：', objectAlt: '建筑效果图：',
     mapAltPlan: '项目资料中的项目布局示意图，含编号和图例（图上文字为俄文）',
     mapAltAerial: '带项目标注的校区建筑效果图',
@@ -65,6 +68,6 @@ export const formatNumber = (n) => n.toLocaleString(htmlLang === 'ru' ? 'ru-RU' 
 /* Форма слова по числу: в русском три формы, в английском две, в китайском одна. */
 export const plural = (n, forms) => {
   let rule = 'other';
-  try { rule = new Intl.PluralRules(htmlLang).select(n); } catch (e) {}
+  try { rule = new Intl.PluralRules(htmlLang).select(n); } catch { /* нет Intl.PluralRules: остаётся форма «other» */ }
   return forms[rule] || forms.other;
 };

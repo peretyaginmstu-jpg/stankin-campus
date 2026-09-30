@@ -4,7 +4,7 @@
 import {T} from './i18n.js';
 const KEY = 'vi';
 const DEFAULTS = {on: false, size: '1', theme: 'bw', images: 'on', spacing: '0'};
-/* Подписи — из dist/i18n.js по языку страницы; значения настроек от языка не зависят. */
+/* Подписи — из i18n.js по языку страницы; значения настроек от языка не зависят. */
 const OPTIONS = {
   size: ['1', '2', '3'].map((value, i) => [value, 'A', T.viSize[i]]),
   theme: ['bw', 'wb', 'bb'].map((value, i) => [value, T.viTheme[i], '']),
@@ -16,9 +16,9 @@ const root = document.documentElement;
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 
-const load = () => { try { return {...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}')}; } catch (e) { return {...DEFAULTS}; } };
+const load = () => { try { return {...DEFAULTS, ...JSON.parse(localStorage.getItem(KEY) || '{}')}; } catch { return {...DEFAULTS}; } };
 let state = load();
-const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* хранилище недоступно: выбор просто не запомнится */ } };
 
 function buildPanel() {
   const panel = document.createElement('section');
