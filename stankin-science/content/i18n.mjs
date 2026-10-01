@@ -151,6 +151,10 @@ export const STRINGS = {
         ['Доля в мировом потоке', 'Сколько процентов всех мировых публикаций направления за период имеют автора из университета.'],
       ],
       readMore: 'Подробнее о методике',
+      aboutTitle: 'Об университете',
+      about: 'МГТУ «СТАНКИН» основан в 1930 году как Московский станкоинструментальный институт и сегодня готовит инженеров и ведёт исследования для станкоинструментальной промышленности и машиностроения. Университет — участник программы стратегического академического лидерства «Приоритет-2030». В Коммунарке строится новый кампус университета с Головным центром компетенций станкоинструментальной отрасли.',
+      aboutCampus: 'Сайт нового кампуса',
+      aboutUniversity: 'Сайт университета',
     },
     competencies: {
       title: 'Компетенции',
@@ -416,6 +420,10 @@ export const STRINGS = {
         ['Share of world output', 'The percentage of all world publications in the area during the period that have an author from the university.'],
       ],
       readMore: 'More on the methodology',
+      aboutTitle: 'About the university',
+      about: 'MSTU STANKIN was founded in 1930 as the Moscow Machine-Tool Institute and today trains engineers and conducts research for the machine-tool industry and mechanical engineering. The university takes part in Priority 2030, the national strategic academic leadership programme. A new campus with the Head Competence Centre of the machine-tool industry is under construction in Kommunarka, Moscow.',
+      aboutCampus: 'New campus website',
+      aboutUniversity: 'University website',
     },
     competencies: {
       title: 'Competencies',

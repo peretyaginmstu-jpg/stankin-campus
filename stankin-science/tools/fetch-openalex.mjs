@@ -91,19 +91,7 @@ async function groupByInstitution(params) {
 
 async function resolveInstitution() {
   log('1. Организация');
-  let record = null;
-  try {
-    record = await api.get(`/institutions/ror:${INSTITUTION.ror}`, {}, { kind: 'single' });
-  } catch (err) {
-    if (!(err instanceof OpenAlexError) || err.status !== 404) throw err;
-    warn(`ROR ${INSTITUTION.ror} не найден в OpenAlex, используется идентификатор ${INSTITUTION.openalexId}`);
-    record = await api.get(`/institutions/${INSTITUTION.openalexId}`, {}, { kind: 'single' });
-  }
-  const id = shortId(record.id);
-  if (id !== INSTITUTION.openalexId) {
-    warn(`OpenAlex сопоставил ROR с ${id}, а в настройках указан ${INSTITUTION.openalexId}`);
-  }
-  // Возможные дубли записи университета — только для журнала и страницы «Методика».
+  // Возможные дубли записи университета — для журнала и страницы «Методика»; запасной путь поиска.
   const search = await api.get('/institutions', {
     search: 'stankin',
     per_page: 25,
@@ -117,6 +105,30 @@ async function resolveInstitution() {
     works: r.works_count,
     ror: r.ror ? shortId(r.ror) : null,
   }));
+  const single = async (path) => {
+    try {
+      return await api.get(path, {}, { kind: 'single' });
+    } catch (err) {
+      if (err instanceof OpenAlexError && err.status === 404) return null;
+      throw err;
+    }
+  };
+  let record = await single(`/institutions/ror:${INSTITUTION.ror}`);
+  if (!record) {
+    warn(`ROR ${INSTITUTION.ror} не найден в OpenAlex, используется идентификатор ${INSTITUTION.openalexId}`);
+    record = await single(`/institutions/${INSTITUTION.openalexId}`);
+  }
+  if (!record) {
+    // Последний вариант: самая крупная российская организация, найденная по запросу «stankin».
+    const best = candidates.filter((c) => c.country === INSTITUTION.country).sort((a, b) => (b.works ?? 0) - (a.works ?? 0))[0];
+    if (!best) throw new OpenAlexError('Университет не найден в OpenAlex: проверьте INSTITUTION.ror и INSTITUTION.openalexId в config/site.mjs');
+    warn(`Университет найден поиском: ${best.id} «${best.name}». Уточните идентификаторы в config/site.mjs`);
+    record = await single(`/institutions/${best.id}`);
+  }
+  const id = shortId(record.id);
+  if (id !== INSTITUTION.openalexId) {
+    warn(`OpenAlex сопоставил ROR с ${id}, а в настройках указан ${INSTITUTION.openalexId}`);
+  }
   const ids = [...new Set([id, ...INSTITUTION.extraIds.map(shortId)])];
   for (const c of candidates) {
     if (!ids.includes(c.id) && c.works >= 50) {
@@ -183,12 +195,12 @@ function compactWork(w, stankinIds, partnerMeta, sources) {
   const insts = new Set();
   let lead = false;
   authorships.forEach((a, i) => {
-    for (const c of a.countries ?? []) if (c) countries.add(c);
+    for (const c of a.countries ?? []) if (c) countries.add(String(c).toUpperCase());
     for (const inst of a.institutions ?? []) {
       const id = shortId(inst.id);
       if (!id) continue;
       insts.add(id);
-      if (inst.country_code) countries.add(inst.country_code);
+      if (inst.country_code) countries.add(String(inst.country_code).toUpperCase());
       if (!partnerMeta.has(id)) {
         partnerMeta.set(id, {
           name: inst.display_name ?? id,
@@ -292,7 +304,7 @@ async function competencyContext(topicIds) {
   return {
     topicKey: topicSetKey(topicIds),
     worldByYear: Object.fromEntries(years_.map((g) => [g.key, g.count]).sort()),
-    countries: mergeGroups(countries).map((g) => ({ code: g.key, name: g.name, n: g.count })),
+    countries: mergeGroups(countries).map((g) => ({ code: String(g.key).toUpperCase(), name: g.name, n: g.count })),
     institutions: mergeGroups(world).slice(0, THRESHOLDS.topInstitutions).map((g) => ({ id: g.key, name: g.name, n: g.count })),
     russianInstitutions: mergeGroups(russia).slice(0, THRESHOLDS.topInstitutions).map((g) => ({ id: g.key, name: g.name, n: g.count })),
     reviews: reviews

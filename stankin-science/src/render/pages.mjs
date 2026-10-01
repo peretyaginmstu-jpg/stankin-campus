@@ -240,6 +240,9 @@ export function homePage(ctx) {
       </ul>
       <a class="text-link" href="${esc(ctx.page('collaboration/'))}">${esc(t.home.collabMore)}</a></div></div>`),
     section('read', t.home.readTitle, '', read),
+    section('about', t.home.aboutTitle, '', `<p class="about-text">${esc(t.home.about)}</p>
+      <p class="about-links"><a class="text-link" href="${esc(ctx.site.campusUrl)}${ctx.lang === 'ru' ? '' : `${ctx.lang}/`}" rel="noopener">${esc(t.home.aboutCampus)}</a>
+      <a class="text-link" href="${esc(ctx.site.universityUrl[ctx.lang] ?? ctx.site.universityUrl.ru)}" rel="noopener">${esc(t.home.aboutUniversity)}</a></p>`),
   ].join('\n');
 }
 
