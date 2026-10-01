@@ -152,7 +152,7 @@ img{display:block;max-width:100%;height:auto}
 .chart-svg .axis-text text{fill:var(--muted);font-size:11.5px;font-variant-numeric:tabular-nums}
 .chart-svg .axis-title{fill:var(--muted);font-size:12px}
 .chart-svg .quad-text text{fill:var(--muted);letter-spacing:.07em;text-transform:uppercase;font-weight:500}
-.chart-svg .ref-text text{fill:var(--muted);font-style:italic}
+.chart-svg .ref-text text{fill:var(--muted);font-style:italic;paint-order:stroke;stroke:var(--surface);stroke-width:3px;stroke-linejoin:round;pointer-events:none}
 .chart-svg .m-accent{fill:var(--accent)}
 .chart-svg .m-context{fill:var(--context)}
 .chart-svg .m-cool{fill:var(--cool)}

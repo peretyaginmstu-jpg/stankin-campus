@@ -145,7 +145,7 @@ export function bubble(spec, width = 880) {
     const rw = textWidth(spec.y.refLabel, refFs);
     boxes.push({ x: m.l + pw - 6 - rw, y: ty - refFs, w: rw, h: refFs * 1.3 });
   }
-  if (refText.length) out.push(`<g class="ref-text" font-size="${refFs}">${refText.join('')}</g>`);
+
   // подписи квадрантов
   if (spec.quadrants) {
     const q = { ...spec.quadrants };
@@ -221,6 +221,8 @@ export function bubble(spec, width = 880) {
     if (ok.gap > 5) leaders.push(`<line x1="${r1(ok.ex)}" y1="${r1(ok.ey)}" x2="${r1(ok.ax)}" y2="${r1(ok.ay)}"/>`);
     labels.push(`<text x="${r1(ok.x)}" y="${r1(ok.y)}" text-anchor="${ok.a}">${esc(text)}</text>`);
   }
+  // подписи опорных линий — поверх точек, с подложкой цвета фона
+  if (refText.length) out.push(`<g class="ref-text" font-size="${refFs}">${refText.join('')}</g>`);
   if (leaders.length) out.push(`<g class="leaders">${leaders.join('')}</g>`);
   out.push(`<g class="point-labels" font-size="${fs}">${labels.join('')}</g>`);
   if (inside.length) out.push(`<g class="point-nums" font-size="${fs}">${inside.join('')}</g>`);
