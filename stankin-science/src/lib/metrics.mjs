@@ -81,12 +81,29 @@ function topicIndex(taxonomy) {
   return new Map(taxonomy.topics.map((t) => [t.id, t]));
 }
 
-export function buildModel(snapshot, { competencies, thresholds, home = 'RU' }) {
+// Исключения из аудита аффилиаций: работы, ошибочно приписанные университету, и темы,
+// которые целиком отбрасываются (например, явно чужие по профилю).
+export function applyExclusions(works, exclude = {}) {
+  const ids = new Set(exclude.works ?? []);
+  const topicIds = new Set(exclude.topics ?? []);
+  const kept = [];
+  let byWork = 0;
+  let byTopic = 0;
+  for (const w of works) {
+    if (ids.has(w.id)) byWork += 1;
+    else if (w.tp && topicIds.has(w.tp)) byTopic += 1;
+    else kept.push(w);
+  }
+  return { works: kept, excluded: { works: byWork, topics: byTopic, total: byWork + byTopic, topicIds: [...topicIds] } };
+}
+
+export function buildModel(snapshot, { competencies, thresholds, home = 'RU', exclude = {} }) {
   const period = snapshot.config.period;
   const years = yearsOf(period);
   const topics = topicIndex(snapshot.taxonomy);
   const worldTopics = snapshot.world.topics; // { T: [p1, p2] }
-  const works = snapshot.stankin.works.filter((w) => w.y >= period.from && w.y <= period.to);
+  const inWindow = snapshot.stankin.works.filter((w) => w.y >= period.from && w.y <= period.to);
+  const { works, excluded } = applyExclusions(inWindow, exclude);
   const instIds = snapshot.config.institutionIds;
   const instMeta = snapshot.institutions ?? {};
   const excludeTypes = snapshot.config.excludedInstitutionTypes ?? ['government', 'funder'];
@@ -300,6 +317,7 @@ export function buildModel(snapshot, { competencies, thresholds, home = 'RU' }) 
     considered: trendTopics.length,
     fastCount: fast.length,
     fastGrowing: fast.slice(0, 30),
+    fastAll: fast,
     whiteSpots: fast.filter((t) => t.n === 0).slice(0, 20),
     present: fast.filter((t) => t.n > 0).slice(0, 20),
     ownRising: topicRows
@@ -389,6 +407,7 @@ export function buildModel(snapshot, { competencies, thresholds, home = 'RU' }) 
       api: snapshot.api ?? null,
       thresholds,
       home,
+      excluded,
     },
     totals: {
       ...total,
@@ -400,6 +419,7 @@ export function buildModel(snapshot, { competencies, thresholds, home = 'RU' }) 
       worldP1,
       worldP2,
       growthWorld: round(ratio(worldP2, worldP1)),
+      growthWorldClassified: round(ratio(worldClassifiedP2, worldClassifiedP1)),
       worldClassified,
       share: round(ratio(works.length, worldTotal), 7),
       countries: countries.size,

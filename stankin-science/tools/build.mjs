@@ -11,7 +11,9 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SITE, INSTITUTION, THRESHOLDS } from '../config/site.mjs';
+import { SITE, INSTITUTION, THRESHOLDS, STRATEGY, EXCLUDE } from '../config/site.mjs';
+import { PRIORITIES } from '../content/priorities.mjs';
+import { buildStrategy } from '../src/lib/strategy.mjs';
 import { COMPETENCIES } from '../content/competencies.mjs';
 import * as TAXONOMY from '../content/taxonomy.mjs';
 import { LANGS, STRINGS } from '../content/i18n.mjs';
@@ -19,6 +21,7 @@ import { buildModel } from '../src/lib/metrics.mjs';
 import { typograph } from '../src/lib/text.mjs';
 import { makeContext, langPrefix } from '../src/render/kit.mjs';
 import { layout } from '../src/render/layout.mjs';
+import { decisionsPage } from '../src/render/decisions.mjs';
 import { homePage, competenciesPage, competencyPage, trendsPage, collaborationPage, methodPage, notFoundPage } from '../src/render/pages.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -83,7 +86,19 @@ function logSummary(model) {
 async function main() {
   const snapshot = JSON.parse(await readFile(dataFile, 'utf8'));
   if (snapshot.schema !== 1) throw new Error(`Неизвестная версия снимка: ${snapshot.schema}`);
-  const model = buildModel(snapshot, { competencies: COMPETENCIES, thresholds: THRESHOLDS, home: INSTITUTION.country });
+  const model = buildModel(snapshot, { competencies: COMPETENCIES, thresholds: THRESHOLDS, home: INSTITUTION.country, exclude: EXCLUDE });
+  // Слой решений: соавторы университета нужны, чтобы отметить знакомых партнёров среди лидеров тем.
+  const ownIds = new Set(model.meta.institutionIds);
+  const partnerIds = new Set();
+  for (const w of snapshot.stankin.works) for (const id of w.in) if (!ownIds.has(id)) partnerIds.add(id);
+  model.strategy = buildStrategy(model, {
+    config: STRATEGY,
+    priorities: PRIORITIES,
+    opportunities: snapshot.opportunities ?? {},
+    institutions: snapshot.institutions ?? {},
+    partnerIds,
+    excludeTypes: snapshot.config.excludedInstitutionTypes,
+  });
 
   // Дополнения для страниц: источники публикаций, английские названия классификации, состав компетенций.
   model.sources = snapshot.stankin.sources ?? {};
@@ -98,6 +113,9 @@ async function main() {
     .sort((a, b) => b.n - a.n || b.world - a.world)]));
 
   logSummary(model);
+  const st = model.strategy;
+  console.log(`Выводы: ${Object.entries(st.byVerdict).map(([v, ids]) => `${v} ${ids.length}`).join(', ')}; открыть с нуля: ${st.openings.open.length} (контекст: ${st.opportunitiesLoaded}), нужен новый коллектив: ${st.openings.newTeam.length}`);
+  if (model.meta.excluded.total) console.log(`Исключено по аудиту аффилиаций: ${model.meta.excluded.total}`);
 
   await rm(outDir, { recursive: true, force: true });
   await mkdir(outDir, { recursive: true });
@@ -120,6 +138,7 @@ async function main() {
     };
     const t = STRINGS[lang];
     await render('home', '', t.home.title, t.site.description, (ctx) => homePage(ctx));
+    await render('decisions', 'decisions/', t.decisions.title, t.decisions.lead, (ctx) => decisionsPage(ctx));
     await render('competencies', 'competencies/', t.competencies.title, null, (ctx) => competenciesPage(ctx));
     for (let i = 0; i < visible.length; i += 1) {
       const c = visible[i];
@@ -163,6 +182,13 @@ async function main() {
     model.topics.map((t) => [t.id, t.name, t.subfield, t.competency ?? '', t.n, t.nP1, t.nP2, t.world, t.worldP1, t.worldP2, t.ai, t.fwci, t.top10]),
   ));
 
+  await write('data/decisions.csv', csv(
+    ['id', 'name_ru', 'name_en', 'verdict', 'score', 'position', 'impact', 'market', 'momentum', 'priorities', 'unstable'],
+    model.strategy.competencies.map((r) => {
+      const d = COMPETENCIES.find((x) => x.id === r.id);
+      return [r.id, d.name.ru, d.name.en, r.verdict, r.score, r.components.position, r.components.impact, r.components.market, r.components.momentum, r.priority.join(' '), r.unstable ? 1 : 0];
+    }),
+  ));
   await write('robots.txt', SITE.noindex ? 'User-agent: *\nDisallow: /\n' : 'User-agent: *\nAllow: /\n');
   await write('.nojekyll', '');
   await write('build.json', `${JSON.stringify({

@@ -9,7 +9,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { COMPETENCIES } from '../content/competencies.mjs';
 import { assignTopics, topicSetKey } from '../src/lib/classify.mjs';
-import { INSTITUTION, WORK_TYPES } from '../config/site.mjs';
+import { INSTITUTION, WORK_TYPES, THRESHOLDS, STRATEGY } from '../config/site.mjs';
+import { PRIORITIES } from '../content/priorities.mjs';
+import { buildModel } from '../src/lib/metrics.mjs';
+import { openingCandidates } from '../src/lib/strategy.mjs';
 
 const outFile = path.resolve(process.argv.includes('--out') ? process.argv[process.argv.indexOf('--out') + 1] : 'data/fixture/snapshot.json');
 
@@ -167,6 +170,18 @@ const TOPICS = [
   [2725, 'COVID-19 Clinical Research', 2000, 30, 0],
   [1312, 'Protein Structure and Dynamics', 30000, 1.1, 0.05],
   [1202, 'History of Science and Technology', 6000, 1.0, 0.5],
+  // Быстрорастущие темы, где у университета нет работ, — для раздела «Что открыть с нуля».
+  [2209, 'Digital Twin Technologies in Manufacturing', 3500, 3.4, 0],
+  [2209, 'Wire Arc Additive Manufacturing', 2600, 3.0, 0],
+  [2211, 'High-Entropy Alloys and Their Properties', 5000, 2.6, 0],
+  [2210, 'Remaining Useful Life Prediction', 3000, 2.8, 0],
+  [2503, 'Ceramic Matrix Composites for Extreme Environments', 3200, 2.0, 0],
+  [1702, 'Large Language Models in Engineering', 1500, 9.0, 0],
+  [2207, 'Collaborative Robots and Human-Robot Interaction', 4200, 2.2, 0],
+  [2502, 'Bioresorbable Metallic Implants', 2800, 1.9, 0],
+  [3304, 'Online and Blended Engineering Education', 6000, 1.6, 0],
+  [2212, 'Wave Energy Converter Numerical Simulation', 2400, 2.3, 0],
+  [3107, 'Quantum Metrology and Sensing', 3200, 2.4, 0],
 ];
 
 const FIELD_NAMES = {
@@ -397,6 +412,40 @@ const snapshot = {
   institutions,
   warnings: ['Демонстрационный снимок: все числа и названия выдуманы.'],
 };
+
+// Контекст тем «открыть с нуля» — для тех же кандидатов, что выбирает настоящая выгрузка.
+{
+  const draft = buildModel(snapshot, { competencies: COMPETENCIES, thresholds: THRESHOLDS, home: 'RU' });
+  const opportunities = {};
+  for (const id of openingCandidates(draft, { config: STRATEGY, priorities: PRIORITIES })) {
+    const total = worldTopics[id][0] + worldTopics[id][1];
+    const insts = Array.from({ length: 30 }, (_, i) => {
+      const country = weighted(WORLD_COUNTRIES);
+      const iid = i % 11 === 5 ? pick(foreignPartners[weighted(PARTNER_COUNTRIES)]) : makeInstitution(country);
+      return { id: iid, name: institutions[iid].name, n: Math.round((total / 60) * (i + 1) ** -0.7) + 1 };
+    });
+    const ru = Array.from({ length: 8 }, (_, i) => {
+      const iid = rand() < 0.5 ? pick(homePartners) : makeInstitution('RU');
+      return { id: iid, name: institutions[iid].name, n: Math.max(1, Math.round((total / 900) * (i + 1) ** -0.6)) };
+    }).sort((a, b) => b.n - a.n);
+    opportunities[id] = {
+      countries: WORLD_COUNTRIES.slice(0, 12).map(([code, w]) => ({ code, name: code, n: Math.round((total * w) / 100 * (0.7 + rand() * 0.6)) })).sort((a, b) => b.n - a.n),
+      institutions: insts.sort((a, b) => b.n - a.n),
+      russianInstitutions: [...new Map(ru.map((g) => [g.id, g])).values()],
+      reviews: Array.from({ length: 3 }, (_, i) => ({
+        id: `W${wseq++}`,
+        doi: `10.5555/demo.review.${id}.${i + 1}`,
+        t: `Demo review ${i + 1}: state of the art in ${topics.find((t) => t.id === id).name.toLowerCase()}`,
+        y: 2022 + i,
+        c: Math.round(600 / (i + 1)),
+        src: 'Demo Progress in Engineering Science',
+        a: ['A. Reviewer', 'B. Author'],
+        na: 3 + i,
+      })),
+    };
+  }
+  snapshot.opportunities = opportunities;
+}
 
 await mkdir(path.dirname(outFile), { recursive: true });
 await writeFile(outFile, `${JSON.stringify(snapshot)}\n`);

@@ -40,6 +40,10 @@ test('выгрузка, сборка и проверка на имитации A
     assert.ok(ctx.every((c) => c.countries.length && c.institutions.length && c.topicKey));
     assert.ok(ctx.some((c) => c.reviews.length));
     assert.ok(Object.keys(snap.institutions).length > 20);
+    // темы «открыть с нуля»: те же кандидаты, что выбирает сборка, с партнёрами и странами
+    const opp = Object.values(snap.opportunities ?? {});
+    assert.ok(opp.length >= 5, `opportunities: ${opp.length}`);
+    assert.ok(opp.every((o) => Array.isArray(o.countries) && Array.isArray(o.russianInstitutions) && Array.isArray(o.reviews)));
     // ключ не попал ни в журнал, ни в снимок
     assert.ok(!fetched.stdout.includes('test-key'));
     assert.ok(!JSON.stringify(snap).includes('test-key'));
@@ -49,6 +53,11 @@ test('выгрузка, сборка и проверка на имитации A
     await run('node', [path.join(ROOT, 'tools/build.mjs'), '--data', snapshotFile, '--out', out], { cwd: ROOT });
     const checked = await run('node', [path.join(ROOT, 'tools/check.mjs'), '--dir', out, '--publish'], { cwd: ROOT });
     assert.match(checked.stdout, /Проверка пройдена/);
+    const page = await readFile(path.join(out, 'decisions/index.html'), 'utf8');
+    assert.match(page, /id="open"/);
+    assert.match(page, /class="opening" id="open-T/);
+    const csv = await readFile(path.join(out, 'data/decisions.csv'), 'utf8');
+    assert.ok(csv.split('\n').length > 5);
   } finally {
     await mock.close();
     await rm(dir, { recursive: true, force: true });

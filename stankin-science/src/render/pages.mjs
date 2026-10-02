@@ -2,10 +2,11 @@
 
 import { bubble, lines, columns, hbars, divergingBar, refBar, sparkline } from '../charts/charts.mjs';
 import { esc, kpis, figure, legend, bubbleKey, table, cell, text, workItem, rankText, quadrantTag, tip } from './kit.mjs';
+import { homeDecisions, verdictBox } from './decisions.mjs';
 
 const visibleOf = (model) => model.competencies.filter((c) => c.visible);
 
-function hero(ctx, { eyebrow, crumb = '', title, lead, extra = '' }) {
+export function hero(ctx, { eyebrow, crumb = '', title, lead, extra = '' }) {
   return `<section class="hero">
   <div class="wrap">
     ${crumb}${eyebrow ? `<p class="eyebrow">${esc(eyebrow)}</p>` : ''}
@@ -16,7 +17,7 @@ function hero(ctx, { eyebrow, crumb = '', title, lead, extra = '' }) {
 </section>`;
 }
 
-function section(id, title, lead, body, { cls = '' } = {}) {
+export function section(id, title, lead, body, { cls = '' } = {}) {
   return `<section class="section${cls ? ` ${cls}` : ''}" id="${esc(id)}" aria-labelledby="${esc(id)}-title">
   <div class="wrap">
     <div class="section-head">
@@ -28,7 +29,7 @@ function section(id, title, lead, body, { cls = '' } = {}) {
 </section>`;
 }
 
-function dataNote(ctx, { methodLink = true } = {}) {
+export function dataNote(ctx, { methodLink = true } = {}) {
   const m = ctx.model.meta;
   const parts = [];
   if (m.fetchedAt) parts.push(esc(ctx.t.ui.dataAsOf(ctx.date(m.fetchedAt))));
@@ -228,6 +229,7 @@ export function homePage(ctx) {
       extra: `${dataNote(ctx)}${tiles}`,
     }),
     section('map', t.home.mapTitle, t.home.mapLead, `${map}${quadrantGrid(ctx)}`),
+    model.strategy ? section('decisions-summary', t.decisions.homeTitle, t.decisions.homeLead, homeDecisions(ctx)) : '',
     section('cards', t.home.cardsTitle, t.home.cardsLead(model.meta.thresholds.competencyMinWorks), competencyCards(ctx)),
     section('dynamics-section', t.home.dynamicsTitle, t.home.dynamicsLead(ctx.change(m.growthOwn), ctx.change(m.growthWorld), period.p1, period.p2), `<div class="grid-2">${dynamics}${perYear}</div>`),
     section('venues-section', t.home.venuesTitle, t.home.venuesLead, `<div class="grid-side">${venues}<div class="side-box"><p class="side-title">${esc(t.home.venuesKinds)}</p>${kindList}</div></div>`),
@@ -422,7 +424,7 @@ export function competencyPage(ctx, c, { prev, next }) {
       crumb: crumbs,
       title: def.name[ctx.lang],
       lead: def.summary[ctx.lang],
-      extra: `${tiles}<div class="facts">${sentences.map((s) => `<p>${esc(s)}</p>`).join('')}</div>${position}`,
+      extra: `${tiles}<div class="facts">${sentences.map((s) => `<p>${esc(s)}</p>`).join('')}</div>${position}${model.strategy ? verdictBox(ctx, c.id) : ''}`,
     }),
     section('years', t.competency.dynamicsTitle, '', dynamics),
     section('leaders', t.competency.leadersTitle, '', leaders),
@@ -595,6 +597,8 @@ export function methodPage(ctx, { competencies }) {
   const share = cov.classifiedWorks ? cov.assignedWorks / cov.classifiedWorks : null;
   blocks.push(tightSection('competencies', t.method.competenciesTitle, '', `<p>${esc(t.method.competencies)}</p><p>${esc(t.method.coverage({ assigned: ctx.int(cov.assignedWorks), classified: ctx.int(cov.classifiedWorks), share: ctx.pct(share), unclassified: ctx.int(cov.unclassifiedWorks) }))}</p>${compBlocks}
     ${cov.unassignedTopics.length ? `<h3>${esc(t.method.unassignedTitle)}</h3>${table([{ key: 'name', label: t.metric.topic }, { key: 'sub', label: t.metric.subfield }, { key: 'n', label: t.metric.works, num: true }], cov.unassignedTopics.map((x) => ({ cells: { name: cell(`<span lang="en">${esc(x.name)}</span>`, x.name), sub: text(ctx.subfieldName(x.subfield)), n: cell(ctx.int(x.n), x.n) } })))}` : ''}`));
+  const ex = meta.excluded;
+  if (ex?.total) blocks.push(tightSection('excluded', t.method.excludedTitle, '', `<p>${esc(t.method.excluded(ctx.worksN(ex.total), ctx.int(ex.works), ctx.int(ex.topics)))}</p>`));
   blocks.push(tightSection('limits', t.method.limitsTitle, '', `<ul class="bullets">${t.method.limits.map((s) => `<li>${esc(s)}</li>`).join('')}</ul>`));
   blocks.push(tightSection('update', t.method.updateTitle, '', `<p>${esc(t.method.update)}</p><p><a class="text-link" href="${esc(ctx.site.repoUrl)}" rel="noopener">${esc(t.footer.code)}</a></p>`));
   const dl = t.method.downloads;
@@ -603,6 +607,7 @@ export function methodPage(ctx, { competencies }) {
     <li><a href="${esc(ctx.asset('data/competencies.csv'))}" download>${esc(dl.competencies)}</a></li>
     <li><a href="${esc(ctx.asset('data/subfields.csv'))}" download>${esc(dl.subfields)}</a></li>
     <li><a href="${esc(ctx.asset('data/topics.csv'))}" download>${esc(dl.topics)}</a></li>
+    ${model.strategy ? `<li><a href="${esc(ctx.asset('data/decisions.csv'))}" download>${esc(dl.decisions)}</a></li>` : ''}
   </ul>`));
   const notes = [...(meta.warnings ?? [])];
   if (notes.length || meta.institution?.candidates?.length) {

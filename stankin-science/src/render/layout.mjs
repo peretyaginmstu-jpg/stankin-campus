@@ -5,6 +5,7 @@ import { LANGS } from '../../content/i18n.mjs';
 
 const NAV = [
   ['home', ''],
+  ['decisions', 'decisions/'],
   ['competencies', 'competencies/'],
   ['trends', 'trends/'],
   ['collaboration', 'collaboration/'],

@@ -5,8 +5,8 @@
 //
 // Скрипт собирает «снимок» (snapshot.json): классификацию тем, мировые объёмы публикаций по темам
 // за два периода, публикации университета за окно анализа и мировой контекст каждой компетенции
-// (страны, организации, динамика, обзоры). Сборка сайта (tools/build.mjs) работает только со снимком
-// и в сеть не ходит. Расход: около 300–500 запросов-списков, то есть 3–5 тыс. кредитов OpenAlex
+// (страны, организации, динамика, обзоры), а также контекст тем «открыть с нуля». Сборка сайта (tools/build.mjs) работает только со снимком
+// и в сеть не ходит. Расход: около 400–600 запросов-списков, то есть 4–6 тыс. кредитов OpenAlex
 // из 100 тыс., доступных в сутки по бесплатному ключу.
 //
 // Переменные окружения: OPENALEX_API_KEY (обязательно), YEARS_FROM / YEARS_TO (окно анализа),
@@ -14,8 +14,11 @@
 
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { INSTITUTION, THRESHOLDS, WORK_TYPES, analysisPeriod } from '../config/site.mjs';
+import { INSTITUTION, THRESHOLDS, WORK_TYPES, STRATEGY, EXCLUDE, analysisPeriod } from '../config/site.mjs';
 import { COMPETENCIES } from '../content/competencies.mjs';
+import { PRIORITIES } from '../content/priorities.mjs';
+import { buildModel } from '../src/lib/metrics.mjs';
+import { openingCandidates } from '../src/lib/strategy.mjs';
 import { OpenAlex, OpenAlexError, chunk, mergeGroups, shortId } from '../src/lib/openalex.mjs';
 import { assignTopics, topicSetKey } from '../src/lib/classify.mjs';
 import { cleanTitle } from '../src/lib/text.mjs';
@@ -389,11 +392,41 @@ async function main() {
     }
   }
 
+  // «Открыть с нуля»: кандидаты отбираются по тем же правилам, что и на сайте (без данных о
+  // партнёрах), и для них запрашиваются ведущие страны, организации и свежие обзоры.
+  log('5б. Темы «открыть с нуля»: мировой контекст');
+  const opportunities = {};
+  {
+    const draft = buildModel({
+      source: 'openalex',
+      config: { period, types: WORK_TYPES, institutionIds: inst.ids, excludedInstitutionTypes: [...EXCLUDED_INSTITUTION_TYPES] },
+      institution: inst,
+      taxonomy,
+      world,
+      stankin: { works, sources },
+      competencies,
+    }, { competencies: COMPETENCIES, thresholds: THRESHOLDS, home: INSTITUTION.country, exclude: EXCLUDE });
+    const ids = openingCandidates(draft, { config: STRATEGY, priorities: PRIORITIES });
+    for (const id of ids) {
+      try {
+        const ctx = await competencyContext([id]);
+        opportunities[id] = { countries: ctx.countries.slice(0, 20), institutions: ctx.institutions.slice(0, 50), russianInstitutions: ctx.russianInstitutions.slice(0, 30), reviews: ctx.reviews.slice(0, 3) };
+      } catch (err) {
+        if (err instanceof OpenAlexError && [401, 403, 409].includes(err.status)) throw err;
+        warn(`Тема ${id}: контекст не загружен (${err.message})`);
+      }
+    }
+    log(`  тем: ${ids.length}, загружено: ${Object.keys(opportunities).length} · ${elapsed()}`);
+  }
+
   // Метаданные: первые организации мира (для таблиц и места университета) и российские
   // организации из выборки с фильтром по стране (в ней есть и зарубежные соавторы — их отсеиваем).
   const known = new Map(partnerMeta);
   const need = [];
   for (const ctx of Object.values(competencies)) {
+    need.push(...ctx.institutions.map((g) => g.id), ...ctx.russianInstitutions.map((g) => g.id));
+  }
+  for (const ctx of Object.values(opportunities)) {
     need.push(...ctx.institutions.map((g) => g.id), ...ctx.russianInstitutions.map((g) => g.id));
   }
   await loadInstitutionMeta(need, known);
@@ -422,6 +455,7 @@ async function main() {
     world,
     stankin: { works, sources },
     competencies,
+    opportunities,
     institutions,
     warnings,
   };

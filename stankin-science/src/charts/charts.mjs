@@ -173,7 +173,7 @@ export function bubble(spec, width = 880) {
     const open = p.href ? `<a class="pt" href="${esc(p.href)}"${tipAttr(p.tip)} aria-label="${esc(p.aria ?? p.label)}">` : `<g class="pt" tabindex="0"${tipAttr(p.tip)} aria-label="${esc(p.aria ?? p.label)}">`;
     out.push(open);
     out.push(`<circle class="hit" cx="${r1(p.cx)}" cy="${r1(p.cy)}" r="${r1(hit)}"/>`);
-    out.push(`<circle class="dot ${p.tone === 'context' ? 'm-context' : 'm-accent'}" cx="${r1(p.cx)}" cy="${r1(p.cy)}" r="${r1(p.r)}"/>`);
+    out.push(`<circle class="dot ${p.tone === 'context' ? 'm-context' : p.tone === 'cool' ? 'm-cool' : 'm-accent'}" cx="${r1(p.cx)}" cy="${r1(p.cy)}" r="${r1(p.r)}"/>`);
     out.push(p.href ? '</a>' : '</g>');
   }
   out.push('</g>');
@@ -419,6 +419,15 @@ export function divergingBar(value, { w = 72, h = 12 } = {}) {
 }
 
 // Цитируемость в ячейке: полоса до значения (шкала 0–3), отметка — мировой уровень 1,0.
+// Шкала 0..1 для составляющих балла.
+export function meter(value, { w = 64, h = 10 } = {}) {
+  const out = [`<svg class="micro meter" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">`];
+  out.push(`<rect class="meter-track" x="0" y="${h / 2 - 2}" width="${w}" height="4" rx="2"/>`);
+  if (value != null) out.push(`<rect class="m-accent" x="0" y="${h / 2 - 2}" width="${r1(Math.max(Math.min(value, 1) * w, 1.5))}" height="4" rx="2"/>`);
+  out.push('</svg>');
+  return out.join('');
+}
+
 export function refBar(value, { w = 56, h = 12, max = 3, ref = 1 } = {}) {
   const out = [`<svg class="micro" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true">`];
   out.push(`<rect class="micro-track" x="0" y="${h / 2 - 1}" width="${w}" height="2"/>`);
