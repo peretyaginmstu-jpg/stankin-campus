@@ -1,0 +1,131 @@
+name: Публикация
+
+# Выгрузка данных OpenAlex → сборка → проверки → публикация на GitHub Pages.
+#
+# Нужно один раз:
+#   1. Секрет репозитория OPENALEX_API_KEY (Settings → Secrets and variables → Actions → New repository secret).
+#      Бесплатный ключ — после регистрации на https://openalex.org/settings/api
+#   2. Settings → Pages → Source: «GitHub Actions».
+# Пока ключа нет, workflow прогоняет тесты и завершается с предупреждением, ничего не публикуя.
+#
+# Снимок данных кэшируется на месяц: повторные запуски в том же месяце не тратят запросы OpenAlex.
+# Ежемесячный запуск по расписанию берёт свежие данные; принудительно — Run workflow → refresh.
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '17 3 3 * *'
+  workflow_dispatch:
+    inputs:
+      refresh:
+        description: Заново выгрузить данные OpenAlex, даже если снимок этого месяца уже есть
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.mode.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Тесты
+        run: npm test
+
+      - name: Ключ OpenAlex
+        id: key
+        env:
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+        run: |
+          if [ -z "$OPENALEX_API_KEY" ]; then
+            echo "::warning title=Нет ключа OpenAlex::Добавьте секрет репозитория OPENALEX_API_KEY (Settings → Secrets and variables → Actions). Бесплатный ключ выдаётся на https://openalex.org/settings/api. Пока ключа нет, данные не выгружаются и сайт не публикуется."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Режим GitHub Pages
+        id: mode
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          KEY: ${{ steps.key.outputs.present }}
+        run: |
+          type=$(gh api "repos/$REPO/pages" --jq .build_type 2>/dev/null) || type=none
+          if [ "$type" != workflow ]; then
+            echo "::notice title=Pages не настроены::В Settings → Pages → Source выберите «GitHub Actions», чтобы сайт публиковался (сейчас: $type)."
+          fi
+          if [ "$type" = workflow ] && [ "$KEY" = true ]; then deploy=true; else deploy=false; fi
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+
+      - name: Месяц снимка
+        id: month
+        run: echo "value=$(date -u +%Y-%m)" >> "$GITHUB_OUTPUT"
+
+      - name: Снимок данных этого месяца
+        id: cache
+        if: steps.key.outputs.present == 'true'
+        uses: actions/cache@v4
+        with:
+          path: data/snapshot/snapshot.json
+          key: openalex-${{ steps.month.outputs.value }}-${{ hashFiles('config/site.mjs', 'content/competencies.mjs', 'tools/fetch-openalex.mjs', 'src/lib/openalex.mjs') }}
+
+      - name: Выгрузка OpenAlex
+        if: steps.key.outputs.present == 'true' && (steps.cache.outputs.cache-hit != 'true' || inputs.refresh)
+        env:
+          OPENALEX_API_KEY: ${{ secrets.OPENALEX_API_KEY }}
+        run: node tools/fetch-openalex.mjs
+
+      - name: Настройка Pages
+        id: pages
+        if: steps.mode.outputs.deploy == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Сборка сайта
+        if: steps.key.outputs.present == 'true'
+        env:
+          SITE_BASE: ${{ steps.pages.outputs.base_path && format('{0}/', steps.pages.outputs.base_path) || '/stankin-science/' }}
+        run: node tools/build.mjs
+
+      - name: Проверка сборки
+        if: steps.key.outputs.present == 'true'
+        run: node tools/check.mjs --dir dist --publish
+
+      - name: Снимок данных — в артефакты запуска
+        if: steps.key.outputs.present == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: openalex-snapshot-${{ steps.month.outputs.value }}
+          path: data/snapshot/snapshot.json
+          retention-days: 90
+
+      - name: Сборка — в артефакт Pages
+        if: steps.mode.outputs.deploy == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    if: needs.build.outputs.deploy == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Публикация
+        id: deployment
+        uses: actions/deploy-pages@v4

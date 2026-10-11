@@ -1,0 +1,11 @@
+# Сборка и выгрузка данных создаются заново (локально или в GitHub Actions)
+/dist/
+/dist-demo/
+/data/snapshot/
+# Синтетический снимок для разработки создаётся командой npm run fixture (npm test и npm run demo делают это сами)
+/data/fixture/
+/screenshots/
+node_modules/
+.DS_Store
+Thumbs.db
+*.log

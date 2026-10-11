@@ -1,0 +1,25 @@
+name: Проверки
+
+# Тесты и демо-сборка из синтетических данных: работают без ключа OpenAlex и без сети.
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Тесты
+        run: npm test
+      - name: Демо-сборка
+        run: npm run demo
+      - name: Проверка демо-сборки
+        run: node tools/check.mjs --dir dist-demo

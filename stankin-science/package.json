@@ -1,0 +1,19 @@
+{
+  "name": "stankin-science",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Научные компетенции МГТУ «СТАНКИН» в контексте мировой науки: статический сайт на открытых данных OpenAlex",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "fetch": "node tools/fetch-openalex.mjs",
+    "build": "node tools/build.mjs",
+    "demo": "node tools/make-fixture.mjs && node tools/build.mjs --data data/fixture/snapshot.json --out dist-demo",
+    "fixture": "node tools/make-fixture.mjs",
+    "check": "node tools/check.mjs",
+    "serve": "node tools/serve.mjs",
+    "test": "node tools/make-fixture.mjs && node --test test/*.test.mjs"
+  }
+}
