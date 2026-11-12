@@ -175,16 +175,30 @@ html.js .reveal.in .chips li { opacity: 1; transform: none; }
 .now-next li { padding-top: 16px; border-top: 1px solid var(--line); font-size: 14px; line-height: 1.5; color: #cfcabf; }
 .now-next li span { display: block; margin-bottom: 10px; font-family: var(--serif); font-size: clamp(32px, 3vw, 52px); line-height: 1; letter-spacing: -.04em; color: var(--paper); }
 .roadmap-scroll { overflow-x: auto; padding-bottom: 10px; scrollbar-width: thin; }
-.roadmap { --inset: 70px; position: relative; min-width: 1000px; height: 400px; }
-.roadmap-line { position: absolute; left: var(--inset); right: var(--inset); top: 310px; height: 2px; background: var(--line); }
+.roadmap-scroll:focus-visible { outline-offset: -2px; }
+/* На узком экране шкала шире окна. Края затемняются там, где есть что листать (классы ставит ui.js):
+   без этого о прокрутке ничего не говорило, кроме обрезанной подписи. */
+.roadmap-scroll.can-left, .roadmap-scroll.can-right {
+  --fade-l: 0px; --fade-r: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 var(--fade-l), #000 calc(100% - var(--fade-r)), transparent 100%);
+}
+.roadmap-scroll.can-left { --fade-l: 44px; }
+.roadmap-scroll.can-right { --fade-r: 44px; }
+/* Высота зависит от числа ярусов подписей: --max-level приходит из сборки (0 — все подписи в один ряд).
+   --axis — расстояние от верха до линии шкалы. */
+.roadmap { --inset: 70px; --axis: calc(88px + var(--max-level, 3) * 74px); position: relative; min-width: 1000px; height: calc(var(--axis) + 98px); }
+.roadmap-line { position: absolute; left: var(--inset); right: var(--inset); top: var(--axis); height: 2px; background: var(--line); }
 .roadmap-progress { position: absolute; left: 0; top: 0; height: 100%; width: calc(var(--today, 0) * 100%); background: var(--accent); transition: width 1.4s var(--ease); }
-.roadmap-year { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); top: 328px; transform: translateX(-50%); font-family: var(--serif); font-size: 20px; color: var(--muted); }
+/* Подложка цветом страницы и слой выше отметки «сегодня»: её риска проходит позади года, а не сквозь цифры. */
+.roadmap-year { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); top: calc(var(--axis) + 18px); z-index: 1; transform: translateX(-50%); padding: 0 8px; background: var(--paper); font-family: var(--serif); font-size: 20px; color: var(--muted); }
 .roadmap-year::before { content: ""; position: absolute; left: 50%; top: -18px; width: 1px; height: 10px; background: var(--line); }
-.roadmap-marker { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); bottom: calc(100% - 310px + var(--lift, 0px)); width: 136px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; translate: 0 8px; transition: opacity .6s var(--ease), translate .6s var(--ease); transition-delay: calc(.3s + var(--i, 0) * 120ms); }
+.roadmap-marker { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); bottom: calc(100% - var(--axis) + var(--lift, 0px)); width: 136px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; text-align: center; opacity: 0; translate: 0 8px; transition: opacity .6s var(--ease), translate .6s var(--ease); transition-delay: calc(.3s + var(--i, 0) * 120ms); }
 /* Шаг между ярусами был меньше высоты подписи (66px), и точка верхней отметки садилась на дату нижней. */
 .roadmap-marker[data-level="1"] { --lift: 74px; }
 .roadmap-marker[data-level="2"] { --lift: 148px; }
 .roadmap-marker[data-level="3"] { --lift: 222px; }
+.roadmap-marker[data-level="4"] { --lift: 296px; }
 html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translate: none; }
 .roadmap-marker i { position: relative; order: 3; display: block; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 1px solid var(--accent); margin-top: 10px; translate: 0 6px; }
 .roadmap-marker i::after { content: ""; position: absolute; left: 50%; top: 100%; width: 1px; height: var(--lift, 0px); background: var(--line); }
@@ -194,8 +208,16 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
 .roadmap-date, .roadmap-text { position: relative; background: var(--paper); padding: 0 6px; }
 .roadmap-marker[data-kind=plan] .roadmap-date { color: var(--accent); }
 .roadmap-text { order: 2; margin-top: 3px; font-size: 10px; line-height: 1.35; color: var(--muted); }
-.roadmap-today { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); top: 312px; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
-.roadmap-today i { display: block; width: 1px; height: 22px; background: var(--accent); }
+/* «Сегодня» стоит строкой ниже годов. В одной строке с ними подпись наезжала на следующий год:
+   к концу года отметка подходит к его границе вплотную (заметно с ноября по январь). */
+.roadmap-today { position: absolute; left: calc(var(--inset) + (100% - var(--inset) * 2) * var(--p)); top: calc(var(--axis) + 2px); transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 10px; line-height: 1.6; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); white-space: nowrap; }
+.roadmap-today i { display: block; width: 1px; height: 57px; background: var(--accent); }
+/* Точка «сегодня» на линии шкалы и расходящееся от неё кольцо: шкала показывает живую дату, а не рисунок. */
+.roadmap-today::before { content: ""; position: absolute; left: 50%; top: -5px; width: 9px; height: 9px; margin-left: -4.5px; border-radius: 50%; background: var(--accent); }
+@media (prefers-reduced-motion: no-preference) {
+  .roadmap-today::before { animation: today-pulse 2.6s ease-out infinite; }
+}
+@keyframes today-pulse { 0% { box-shadow: 0 0 0 0 rgba(180, 67, 45, .5); } 70%, 100% { box-shadow: 0 0 0 13px rgba(180, 67, 45, 0); } }
 .roadmap-note { margin: 10px 0 0; font-size: 12px; color: var(--muted); }
 .filter-status { margin: 20px 0 0; font-size: 12px; line-height: 1.6; color: var(--muted); }
 .filter-status:empty { display: none; }
@@ -307,7 +329,6 @@ html:not(.js) .roadmap-marker, .reveal.in .roadmap-marker { opacity: 1; translat
   .hotspot[data-object='residences'] .hotspot-label { left: 10px; transform: none; }
   .object-detail { padding: 20px; }
   .object-metrics { gap: 16px; }
-  .roadmap { min-width: 860px; --inset: 56px; }
   .now-date { font-size: clamp(36px, 11vw, 52px); }
 }
 

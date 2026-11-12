@@ -16,23 +16,149 @@ const format = formatNumber;
 const revealer = new IntersectionObserver((entries) => {
   entries.forEach((e) => { if (e.isIntersecting) { e.target.classList.add('in'); revealer.unobserve(e.target); } });
 }, { threshold: lite ? 0.01 : .12, rootMargin: lite ? '0px 0px 12% 0px' : '0px 0px -8% 0px' });
+
+/* Снимки под «шторкой», которые ещё не открыты: их проверяет update() при прокрутке (см. ниже). */
+let curtains = [];
+function openCurtains() {
+  const vh = innerHeight;
+  curtains = curtains.filter((el) => {
+    const r = el.getBoundingClientRect();
+    /* Горизонталь не проверяем: карточки галереи за правым краем открываются вместе с рядом — лента
+       листается своим событием прокрутки, и иначе они остались бы закрытыми. */
+    if (r.height && r.top < vh * .92 && r.bottom > 0) {
+      el.classList.add('seen');
+      /* Плитка со снимком сама же и появляется (.reveal): наблюдатель её под шторкой не видит, включаем сразу. */
+      if (el.classList.contains('reveal')) { el.classList.add('in'); revealer.unobserve(el); }
+      return false;
+    }
+    return true;
+  });
+}
+
+/* ---------- Микроанимации (12.11.2026): заголовки из-под маски, «шторка» на снимках, наклон плиток ----------
+   Оформление — в ui.css под классом html.fx. Класс не ставится при «меньше движения» и в версии для
+   слабовидящих; если её включают на ходу, класс снимается, и всё скрытое показывается сразу.
+   Блок стоит до первого наблюдения за .reveal: к моменту появления блока его заголовок уже разбит на строки. */
+if (!reduced.matches && !root.classList.contains('vi')) {
+  root.classList.add('fx');
+  /* Наблюдатель отключается сразу после снятия класса: classList.remove() записывает атрибут class заново
+     даже тогда, когда снимать нечего, — без отключения наблюдатель будил бы сам себя бесконечно, и страница
+     зависала при включении версии для слабовидящих (поймано проверкой). */
+  const viWatch = new MutationObserver(() => {
+    if (!root.classList.contains('vi')) return;
+    viWatch.disconnect();
+    root.classList.remove('fx');
+  });
+  viWatch.observe(root, { attributes: true, attributeFilter: ['class'] });
+
+  /* Заголовки разделов: каждая строка (границы — <br>) получает маску и выезжает из-под неё. */
+  $$('.section-head h2, .finale h2').forEach((h) => {
+    const lines = [[]];
+    [...h.childNodes].forEach((n) => { if (n.nodeName === 'BR') lines.push([]); else lines[lines.length - 1].push(n); });
+    const out = [];
+    lines.forEach((nodes, i) => {
+      if (i) out.push(document.createElement('br'));
+      if (!nodes.some((n) => n.textContent.trim())) { out.push(...nodes); return; }
+      const mask = document.createElement('span'); mask.className = 'ln';
+      const inner = document.createElement('span'); inner.className = 'ln-in'; inner.style.setProperty('--l', i);
+      inner.append(...nodes); mask.append(inner); out.push(mask);
+    });
+    h.replaceChildren(...out);
+  });
+
+  /* Снимки: «шторка» открывается, когда снимок входит в экран. После раскрытия классы снимаются,
+     иначе обрезка съедала бы тень и наклон плитки. Момент входа ловит не IntersectionObserver, а замер
+     в update(): Chrome учитывает собственную обрезку элемента, и полностью закрытый шторкой снимок для
+     наблюдателя «не виден» никогда (проверено — снимки так и оставались закрытыми). */
+  $$('.tile-image, .card-media, .object-card-media, .feature-figure, .making-visual, .tour-frame, .location-map, .sports-main, .sports-aerial, .map-canvas').forEach((el) => {
+    el.classList.add('curtain');
+    el.addEventListener('transitionend', function opened(e) {
+      if (e.target !== el || e.propertyName !== 'clip-path') return;
+      el.classList.remove('curtain', 'seen'); el.removeEventListener('transitionend', opened);
+    });
+    curtains.push(el);
+  });
+
+  /* Плитки: наклон за курсором и тёплый блик. Только мышь и широкий экран. */
+  if (!lite && matchMedia('(pointer: fine)').matches) {
+    const EASE = 'cubic-bezier(.2,.7,.2,1)';
+    $$('.tile, .story-card').forEach((card) => {
+      let frame = 0, point = null;
+      const tilt = () => {
+        frame = 0;
+        if (!point) return;
+        const r = card.getBoundingClientRect();
+        const x = clamp01((point.x - r.left) / r.width), y = clamp01((point.y - r.top) / r.height);
+        card.style.setProperty('--gx', (x * 100).toFixed(1) + '%');
+        card.style.setProperty('--gy', (y * 100).toFixed(1) + '%');
+        card.style.transform = `perspective(1100px) rotateX(${((.5 - y) * 5).toFixed(2)}deg) rotateY(${((x - .5) * 6).toFixed(2)}deg) translateY(-5px)`;
+      };
+      card.addEventListener('pointerenter', (e) => {
+        if (e.pointerType !== 'mouse' || root.classList.contains('vi')) return;
+        card.style.transition = `transform .25s ${EASE}, box-shadow .6s ${EASE}`;
+        card.classList.add('is-tilting');
+      });
+      card.addEventListener('pointermove', (e) => {
+        if (!card.classList.contains('is-tilting')) return;
+        point = { x: e.clientX, y: e.clientY };
+        if (!frame) frame = requestAnimationFrame(tilt);
+      });
+      card.addEventListener('pointerleave', () => {
+        if (!card.classList.contains('is-tilting')) return;
+        point = null;
+        card.style.transition = `transform .7s ${EASE}, box-shadow .7s ${EASE}`;
+        card.style.transform = '';
+        card.classList.remove('is-tilting');
+      });
+    });
+  }
+}
 $$('.reveal').forEach((el) => revealer.observe(el));
 
-/* ---------- Счётчики показателей ---------- */
+/* ---------- Счётчики показателей: барабаны механического счётчика (12.11.2026) ----------
+   Раньше число досчитывалось от нуля заменой текста. Цифры у Prata разной ширины, поэтому строка показателей
+   на «Науке» во время счёта то умещалась в ряд, то переламывалась, и блок под ней прыгал. Теперь каждая цифра —
+   окошко шириной в свою конечную цифру, внутри которого прокручивается лента 0–9: ширина числа не меняется
+   ни на пиксель. Барабаны останавливаются слева направо. Разметка барабанов живёт только на время движения:
+   по окончании в элементе снова обычный текст. Читалкам всё это время отдаётся готовое число. */
+const DIGIT = /[0-9]/;
+function roll(el, final) {
+  const sr = document.createElement('span'); sr.className = 'odo-sr'; sr.textContent = final;
+  const odo = document.createElement('span'); odo.className = 'odo'; odo.setAttribute('aria-hidden', 'true');
+  let count = 0, last = null;
+  for (const ch of final) {
+    if (!DIGIT.test(ch)) { odo.append(ch); continue; }
+    const slot = document.createElement('span'); slot.className = 'odo-slot';
+    const keep = document.createElement('span'); keep.className = 'odo-keep'; keep.textContent = ch; /* держит ширину и базовую линию */
+    const strip = document.createElement('span'); strip.className = 'odo-strip';
+    const steps = 10 + Number(ch); /* полный оборот и ещё до нужной цифры */
+    for (let i = 0; i <= steps; i++) { const digit = document.createElement('span'); digit.textContent = i % 10; strip.append(digit); }
+    strip.style.setProperty('--steps', steps);
+    strip.style.transitionDuration = (lite ? .9 : 1.15) + count * .16 + 's';
+    slot.append(keep, strip); odo.append(slot); last = strip; count++;
+  }
+  if (!last) { el.textContent = final; return; }
+  el.replaceChildren(sr, odo);
+  /* Скрипт новее стилей (первые минуты после публикации, ui.css ещё из кэша): без правил .odo-* ленты
+     вывалились бы на страницу строкой цифр. Тогда просто оставляем готовое число. */
+  if (getComputedStyle(last).position !== 'absolute') { el.textContent = final; return; }
+  /* Шаг ленты — высота строки в пикселях: единицу lh знают не все браузеры, а строка у показателей бывает разной. */
+  odo.style.setProperty('--lh', last.parentElement.getBoundingClientRect().height + 'px');
+  let finished = false;
+  const done = () => { if (finished) return; finished = true; el.textContent = final; };
+  last.addEventListener('transitionend', done, { once: true });
+  setTimeout(done, 1600 + count * 160); /* вкладка в фоне или версия для слабовидящих, включённая на ходу: события не будет */
+  requestAnimationFrame(() => requestAnimationFrame(() => odo.classList.add('is-rolling')));
+}
+const settled = () => reduced.matches || root.classList.contains('vi');
 const counters = new IntersectionObserver((entries) => {
   entries.forEach((e) => {
     if (!e.isIntersecting) return;
     counters.unobserve(e.target);
     const el = e.target, target = Number(el.dataset.count);
     if (!Number.isFinite(target)) return; /* без числа в data-count оставляем текст из разметки */
-    if (reduced.matches) { el.textContent = format(target); return; }
-    const start = performance.now(), duration = lite ? 1000 : 1500;
-    const tick = (now) => {
-      const p = clamp01((now - start) / duration), eased = 1 - Math.pow(1 - p, 4);
-      el.textContent = format(Math.round(target * eased));
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    if (settled()) { el.textContent = format(target); return; }
+    roll(el, format(target));
   });
 }, { threshold: .5 });
 $$('[data-count]').forEach((el) => counters.observe(el));
@@ -96,6 +222,7 @@ function update() {
   /* Затухание и параллакс героя рассчитаны на длинную страницу. На короткой (404) прокрутки не
      хватает, и заголовок навсегда остаётся приглушённым, поэтому там --sy не трогаем. */
   if (!still() && hero && root.scrollHeight > vh * 1.9) root.style.setProperty('--sy', Math.min(y, vh * 1.2).toFixed(1));
+  if (curtains.length) openCurtains();
   if (sideIndex) sideIndex.classList.toggle('is-over-media', indexOverMedia());
   if (progress && !cssScrollTimeline) {
     const max = root.scrollHeight - vh;
@@ -269,13 +396,45 @@ $$('[data-days-since]').forEach((el) => {
   el.textContent = format(days);
   const label = el.parentElement.querySelector('[data-days-label]');
   if (label) label.textContent = plural(days, T.days);
+  /* Число дней прокручивается теми же барабанами, когда блок оказывается на экране. */
+  if (!settled()) new IntersectionObserver((entries, io) => {
+    if (!entries.some((e) => e.isIntersecting)) return;
+    io.disconnect();
+    if (!settled()) roll(el, format(days));
+  }, { threshold: .5 }).observe(el);
 });
 $$('[data-roadmap]').forEach((map) => {
-  const start = new Date(map.dataset.start + 'T00:00:00'), end = new Date(map.dataset.end + 'T00:00:00');
-  const p = clamp01((today - start) / (end - start));
+  /* Шкала кусочно-линейная: год с событиями шире остальных. Границы годов приходят из сборки в data-scale
+     в виде «дата:доля»; если их нет (страница из кэша прежней сборки), шкала равномерная от data-start до data-end. */
+  const at = (iso) => new Date(iso + 'T00:00:00').getTime();
+  let stops = (map.dataset.scale || '').split(/\s+/).filter(Boolean)
+    .map((s) => { const i = s.lastIndexOf(':'); return [at(s.slice(0, i)), Number(s.slice(i + 1))]; })
+    .filter(([t, f]) => Number.isFinite(t) && Number.isFinite(f));
+  if (stops.length < 2) stops = [[at(map.dataset.start), 0], [at(map.dataset.end), 1]];
+  const now = today.getTime();
+  let p = now < stops[0][0] ? 0 : 1;
+  for (let i = 1; i < stops.length; i++) {
+    const [t0, f0] = stops[i - 1], [t1, f1] = stops[i];
+    if (now >= t0 && now < t1) { p = f0 + (f1 - f0) * (now - t0) / (t1 - t0); break; }
+  }
+  p = clamp01(p);
   const marker = $('.roadmap-today', map);
   map.style.setProperty('--today', p.toFixed(4));
   if (marker) { marker.style.setProperty('--p', p.toFixed(4)); marker.hidden = false; }
+  /* На узком экране шкала шире окна и листается вбок. Сразу показываем окрестности «сегодня»
+     (иначе через год-другой отметка уедет за край) и затемняем те края, за которыми есть продолжение. */
+  const scroller = map.closest('.roadmap-scroll');
+  if (!scroller) return;
+  const edges = () => {
+    const max = scroller.scrollWidth - scroller.clientWidth;
+    scroller.classList.toggle('can-left', scroller.scrollLeft > 4);
+    scroller.classList.toggle('can-right', scroller.scrollLeft < max - 4);
+  };
+  const max = scroller.scrollWidth - scroller.clientWidth;
+  if (max > 0 && marker) scroller.scrollLeft = Math.max(0, Math.min(max, marker.offsetLeft - scroller.clientWidth * .6));
+  scroller.addEventListener('scroll', edges, { passive: true });
+  addEventListener('resize', edges);
+  edges();
 });
 
 /* ---------- Бегущая строка: кнопка паузы ----------
