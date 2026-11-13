@@ -85,6 +85,28 @@ body:not([data-page=home]) main :is(p, li) { text-wrap: pretty; }
 .hotspot.selected .hotspot-dot::before { animation: none; transform: scale(1.25); opacity: .9; border-color: var(--accent); }
 .hotspot:is(.selected, :focus-visible, :hover) .hotspot-label { opacity: 1; visibility: visible; transform: translateX(-50%) translateY(0); transition-delay: 0s; }
 .map-caption { margin: 12px 0 22px; font-size: 11px; line-height: 1.6; color: var(--muted); }
+/* ---------- Камера на карте (13.11.2026): общий вид наезжает на выбранный объект ----------
+   Сдвиг (в процентах от размера снимка) и масштаб задаёт app.js переменными --cam-x, --cam-y, --cam-s.
+   Снимок и слой меток двигаются одинаково, поэтому метки остаются на своих зданиях; сама метка
+   уменьшается во столько же раз и сохраняет размер. Кнопку «Весь кампус» создаёт app.js. */
+.map-canvas { --cam-s: 1; --cam-x: 0; --cam-y: 0; }
+.map-canvas > img, .map-hotspots {
+  transform-origin: 0 0; transform: translate(calc(var(--cam-x) * 1%), calc(var(--cam-y) * 1%)) scale(var(--cam-s));
+  transition: transform 1.2s var(--ease);
+}
+.hotspot { transform: translate(-50%, -50%) scale(calc(1 / var(--cam-s))); transition: transform 1.2s var(--ease); }
+.map-reset {
+  position: absolute; left: 14px; top: 14px; z-index: 5; min-height: 36px; padding: 0 14px; border-radius: 999px;
+  border: 1px solid rgba(243, 239, 230, .28); background: rgba(37, 36, 32, .76); color: var(--paper);
+  font: 500 12px/1 var(--sans); letter-spacing: .02em; cursor: pointer;
+  -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4);
+  opacity: 0; visibility: hidden; transform: translateY(-6px);
+  transition: opacity .3s ease, transform .4s var(--ease), background-color .3s, border-color .3s, visibility 0s linear .3s;
+}
+.map-canvas.is-zoomed .map-reset { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+.map-reset:hover { background: rgba(37, 36, 32, .92); border-color: rgba(243, 239, 230, .6); }
+.map-reset:focus-visible { outline-color: var(--accent-light); outline-offset: 2px; }
+html.vi .map-reset { display: none; }
 .mobile-object-summary { display: none; }
 .object-detail { min-width: 0; padding: 30px; border-radius: var(--radius); background: var(--paper-2); scroll-margin-top: 90px; transition: opacity .35s ease, transform .5s var(--ease); }
 .object-detail.is-switching { opacity: .25; transform: translateY(8px); }

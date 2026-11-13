@@ -168,7 +168,9 @@ const manifestos = $$('[data-words]').map((el) => {
   /* В китайском слова не разделены пробелами: делим текст сегментатором (или по знакам) и склеиваем без пробелов. */
   const source = el.textContent.trim();
   const hanzi = LANG === 'zh';
-  const text = !hanzi ? source.split(/\s+/)
+  /* Делим только по обычным пробелам: слова, связанные при сборке неразрывным пробелом («к работающей»),
+     остаются одним куском и загораются вместе — иначе связка терялась бы и предлог снова повисал в конце строки. */
+  const text = !hanzi ? source.split(/[ \t\n\r]+/)
     : ('Segmenter' in Intl ? [...new Intl.Segmenter('zh', {granularity: 'word'}).segment(source)].map((s) => s.segment) : [...source]);
   el.replaceChildren(...text.flatMap((w, i) => {
     const span = document.createElement('span'); span.className = 'mw'; span.textContent = w;
@@ -467,6 +469,51 @@ $$('.ticker').forEach((ticker) => {
   show(false);
   ticker.append(button);
 });
+
+/* ---------- Переходы между страницами (13.11.2026): тёмная шторка и предзагрузка ----------
+   Уход: по нажатию на внутреннюю ссылку снизу поднимается шторка цвета шапки (класс html.is-leaving), и только
+   когда она почти закрыла экран, начинается переход — задержка 240 мс. Приход: страница, открытая таким
+   переходом, появляется из-под шторки, уходящей вверх (класс html.is-entering ставит строчный скрипт в <head>
+   по метке nav в sessionStorage — до первой отрисовки). В защищённой сборке между страницами на мгновение
+   показывается экран расшифровки: он того же цвета, поэтому шов не виден.
+   Предзагрузка: при наведении на внутреннюю ссылку браузер заранее скачивает её страницу (Speculation Rules,
+   в Firefox — <link rel="prefetch">), и сам переход почти не ждёт сети.
+   Не действует при «меньше движения» и в версии для слабовидящих. */
+const SITE = new URL('.', import.meta.url).pathname; /* «/» или «/stankin-campus/» */
+const sameSite = (a) => a.origin === location.origin && /^https?:$/.test(a.protocol) && a.pathname.startsWith(SITE)
+  && !a.pathname.startsWith(SITE + 'assets/') && !a.target && !a.hasAttribute('download');
+const samePage = (a) => a.pathname === location.pathname && a.search === location.search && !!a.hash;
+if (root.classList.contains('is-entering')) setTimeout(() => root.classList.remove('is-entering'), 1500);
+addEventListener('pageshow', (e) => { if (e.persisted) root.classList.remove('is-leaving', 'is-entering'); });
+addEventListener('click', (e) => {
+  if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+  const a = e.target.closest ? e.target.closest('a[href]') : null;
+  if (!a || !sameSite(a) || samePage(a) || settled() || root.classList.contains('is-leaving')) return;
+  e.preventDefault();
+  try { sessionStorage.setItem('nav', '1'); } catch { /* хранилище закрыто: страница откроется без шторки */ }
+  root.classList.add('is-leaving');
+  setTimeout(() => { location.assign(a.href); }, 240);
+  /* Переход не состоялся (обрыв сети, отмена) — шторку убираем, страница снова доступна. */
+  setTimeout(() => root.classList.remove('is-leaving'), 8000);
+});
+if (typeof HTMLScriptElement.supports === 'function' && HTMLScriptElement.supports('speculationrules')) {
+  const rules = document.createElement('script');
+  rules.type = 'speculationrules';
+  rules.textContent = JSON.stringify({ prefetch: [{ eagerness: 'moderate', where: { and: [
+    { href_matches: SITE + '*' }, { not: { href_matches: SITE + 'assets/*' } }, { not: { selector_matches: '[target], [download]' } },
+  ] } }] });
+  document.head.append(rules);
+} else {
+  const warmed = new Set();
+  const warm = (e) => {
+    const a = e.target.closest ? e.target.closest('a[href]') : null;
+    if (!a || !sameSite(a) || samePage(a) || warmed.has(a.href) || (navigator.connection || {}).saveData) return;
+    warmed.add(a.href);
+    const hint = document.createElement('link'); hint.rel = 'prefetch'; hint.href = a.href; document.head.append(hint);
+  };
+  addEventListener('pointerover', warm, { passive: true });
+  addEventListener('touchstart', warm, { passive: true });
+}
 
 /* ---------- Видеопролёт первого экрана главной (21.09.2026) ----------
    Фотография остаётся основой страницы: ролик подставляется поверх неё только там, где ему есть

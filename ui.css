@@ -482,6 +482,90 @@ html.fx :is(.tile, .story-card).is-tilting::before { opacity: 1; }
   html.fx .ln-in { transform: none !important; }
 }
 
+/* ---------- Переходы между страницами: тёмная шторка (13.11.2026) ----------
+   Классы html.is-leaving и html.is-entering ставит ui.js и строчный скрипт в <head> (см. там же). Шторка
+   поднимается снизу и уходит вверх — одно движение через две страницы. Под «меньше движения» правил нет вовсе:
+   без анимации шторка просто закрыла бы страницу. */
+@keyframes curtain-in { from { transform: translateY(101%); } to { transform: none; } }
+@keyframes curtain-out { from { transform: none; } to { transform: translateY(-101%); } }
+@media (prefers-reduced-motion: no-preference) {
+  html.is-leaving::after, html.is-entering::before { content: ""; position: fixed; inset: 0; z-index: 300; background: var(--ink); pointer-events: none; }
+  html.is-leaving::after { animation: curtain-in .4s var(--ease) both; }
+  html.is-entering::before { animation: curtain-out .75s var(--ease) .12s both; }
+}
+
+/* ---------- Просмотр изображений: сцена, приближение, перелёт (13.11.2026) ----------
+   Сцену .lightbox-stage и кнопки приближения создаёт app.js. Окно занимает всю высоту: приближенному
+   снимку нужно место, особенно на телефоне. Размер самого снимка задаёт скрипт (рамка элемента совпадает
+   с картинкой), поэтому при перелёте и приближении нет пустых полей. */
+.lightbox[open] { display: flex; flex-direction: column; height: 96vh; height: 96dvh; overflow: hidden; }
+.lightbox-stage { flex: 1 1 auto; min-height: 0; display: grid; place-items: center; overflow: hidden; touch-action: none; cursor: zoom-in; }
+.lightbox-stage.is-zoomed { cursor: grab; }
+.lightbox-stage.is-zoomed.is-moving { cursor: grabbing; }
+.lightbox-stage img { max-width: none; object-fit: cover; transition: transform .3s var(--ease); user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+.lightbox-stage.is-moving img { transition: none; }
+.lightbox p { flex: none; }
+.lightbox-zoom { position: absolute; left: 14px; top: 8px; display: flex; gap: 8px; }
+.lightbox-zoom button { display: grid; place-items: center; width: 42px; height: 42px; padding: 0; background: none; border: 1px solid #777367; color: var(--paper); transition: background-color .2s, border-color .2s; }
+.lightbox-zoom button:hover { background: rgba(243, 239, 230, .1); border-color: var(--paper); }
+.lightbox-zoom button:active { transform: scale(.95); }
+.lightbox-zoom svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+html.vi .lightbox-zoom { display: none; }
+/* Перелёт снимка: старый и новый кадры заполняют общую рамку без искажения пропорций. */
+::view-transition-group(zoomed) { animation-duration: .5s; animation-timing-function: cubic-bezier(.2, .7, .2, 1); }
+::view-transition-old(zoomed), ::view-transition-new(zoomed) { height: 100%; object-fit: cover; }
+/* Без перелёта (нет View Transitions или снимок открыт не со страницы) окно проявляется само. */
+@keyframes lightbox-in { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+@keyframes backdrop-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: no-preference) {
+  .lightbox[open]:not(.is-flying) { animation: lightbox-in .35s var(--ease); }
+  .lightbox[open]:not(.is-flying)::backdrop { animation: backdrop-in .35s ease; }
+}
+
+/* ---------- Меню на телефоне и планшете (13.11.2026) ----------
+   Раньше панель появлялась мгновенно (display: none → flex). Теперь она всегда в разметке, а скрыта
+   видимостью и обрезкой: раскрывается на весь экран шторкой сверху вниз, пункты выезжают по очереди,
+   значок-бургер поворачивается в крестик. Скрытые ссылки по-прежнему не попадают в обход по Tab
+   (visibility: hidden). Нумерация пунктов — счётчик CSS, разметка не менялась.
+   В версии для слабовидящих меню выводится статично (a11y.css), поэтому правила — только для html:not(.vi). */
+@media (max-width: 960px) {
+  html:not(.vi) .header nav {
+    position: absolute; top: 100%; left: 0; right: 0; height: calc(100vh - 100%); height: calc(100dvh - 100%); max-height: none;
+    display: flex; flex-direction: column; align-items: stretch; gap: 0; counter-reset: menu;
+    padding: clamp(14px, 3.5vh, 36px) var(--gutter) calc(28px + env(safe-area-inset-bottom, 0px));
+    overflow-y: auto; overscroll-behavior: contain; border-top: 1px solid var(--rule-dark);
+    /* Фон сплошной: даже при 3 % прозрачности крупный белый заголовок первого экрана просвечивал сквозь меню. */
+    background: var(--ink);
+    visibility: hidden; clip-path: inset(0 0 100% 0);
+    transition: clip-path .4s var(--ease), visibility 0s linear .4s;
+  }
+  html:not(.vi) .menu-open .header nav { visibility: visible; clip-path: inset(0 0 0 0); transition: clip-path .6s var(--ease), visibility 0s; }
+  html:not(.vi) .menu-open .header { background: var(--ink); }
+  html:not(.vi) .header nav > a {
+    counter-increment: menu; display: flex; align-items: baseline; gap: 16px; padding: 14px 0; border-bottom: 1px solid var(--rule-dark);
+    font-family: var(--serif); font-size: clamp(28px, 8.4vw, 42px); line-height: 1.1; letter-spacing: -.03em; text-decoration: none;
+    opacity: 0; transform: translateY(24px); transition: opacity .2s ease, transform .2s ease;
+  }
+  html:not(.vi) .header nav > a::before { content: "0" counter(menu); font: 500 11px/1 var(--sans); letter-spacing: .12em; color: #bdb9ae; transform: translateY(-.55em); }
+  html:not(.vi) .header nav > a[aria-current=page] { color: var(--accent-light); }
+  html:not(.vi) .header nav .lang-switch { margin: auto 0 0; padding-top: 24px; border-top: 0; gap: 8px; opacity: 0; transform: translateY(24px); transition: opacity .2s ease, transform .2s ease; }
+  html:not(.vi) .menu-open .header nav > a, html:not(.vi) .menu-open .header nav .lang-switch { opacity: 1; transform: none; transition: opacity .55s var(--ease), transform .7s var(--ease); }
+  html:not(.vi) .menu-open .header nav > :nth-child(1) { transition-delay: .10s; }
+  html:not(.vi) .menu-open .header nav > :nth-child(2) { transition-delay: .15s; }
+  html:not(.vi) .menu-open .header nav > :nth-child(3) { transition-delay: .20s; }
+  html:not(.vi) .menu-open .header nav > :nth-child(4) { transition-delay: .25s; }
+  html:not(.vi) .menu-open .header nav > :nth-child(5) { transition-delay: .30s; }
+  html:not(.vi) .menu-open .header nav > :nth-child(n+6) { transition-delay: .37s; }
+  /* Страница под открытым меню не прокручивается. */
+  html:not(.vi) body.menu-open { overflow: hidden; }
+  /* Бургер ↔ крестик: оба значка лежат в одной ячейке и сменяют друг друга поворотом. */
+  .menu-toggle { display: grid; place-items: center; }
+  .menu-toggle .icon { grid-area: 1 / 1; transition: opacity .25s ease, transform .45s var(--ease); }
+  .menu-toggle .menu-close { display: block; opacity: 0; transform: rotate(-90deg) scale(.6); }
+  .menu-open .menu-toggle .menu-open-icon { display: block; opacity: 0; transform: rotate(90deg) scale(.6); }
+  .menu-open .menu-toggle .menu-close { opacity: 1; transform: none; }
+}
+
 /* ---------- Адаптив ---------- */
 @media (max-width: 1200px) {
   .side-index { display: none; }
